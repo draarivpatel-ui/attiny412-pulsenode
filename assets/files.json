@@ -1,0 +1,87 @@
+[
+ {
+  "path": "gerbers/attiny412-pulsenode-gerbers.zip",
+  "bytes": 3896,
+  "sha256": "5fed94361dba7579c1b1cf9256f14050f193d13e286b7a620f736271311b7e8b"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-F_Cu.gbr",
+  "bytes": 3568,
+  "sha256": "98edd2eb4b9746bdbb2b2b1c88e64651d9dce5761348e629a01f89a45604b2d6"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-B_Cu.gbr",
+  "bytes": 379,
+  "sha256": "77f7a33cf143da2e15e7a191ffca38636d6ba6c331aebe2b826fbab9d9ad0a13"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-F_Mask.gbr",
+  "bytes": 3348,
+  "sha256": "2e48312a8963b225d3fdad73c7b48ba77c5093141735121b697ff815be7fb0b1"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-B_Mask.gbr",
+  "bytes": 380,
+  "sha256": "c1fb63032e1dab60d6c8e5d4ffb5e4b58e33ce4044f396c16e8539542929eda9"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-F_Paste.gbr",
+  "bytes": 3214,
+  "sha256": "40e899f687040a37d32acfe1c354253f7f533ba436ac7620ce7741472e793f37"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-F_Silkscreen.gbr",
+  "bytes": 386,
+  "sha256": "63f5ce8f13928e6e2e5d18838a9b91db8df386ccaa7c1fd508ed921518ea611f"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-Edge_Cuts.gbr",
+  "bytes": 344,
+  "sha256": "42c1ff9ddbb12db3c6ed9caebd772d238317e62749f634b919a903050f54a8c0"
+ },
+ {
+  "path": "gerbers/attiny412-pulsenode-PTH.drl",
+  "bytes": 146,
+  "sha256": "22c5730489cad0302149a3cd4ba0c9756c5dd5f2badf293570ea86d48c940e6a"
+ },
+ {
+  "path": "cad/attiny412_pulsenode_assembly.step",
+  "bytes": 92903,
+  "sha256": "f5088c95bcfe8667e54df5389c56fefafb58c34e9c9073eecf6bc1fe12529b79"
+ },
+ {
+  "path": "assets/board.stl",
+  "bytes": 76884,
+  "sha256": "7955aa2354bfc019a8217e48abd030cc06b6871c1ec409ea16f96df42fa230db"
+ },
+ {
+  "path": "assets/parts.stl",
+  "bytes": 2484,
+  "sha256": "7cb1f14140de0f3290965239c429c118465804a1cd7e95a564c1429c67594d1a"
+ },
+ {
+  "path": "attiny412-pulsenode.kicad_pro",
+  "bytes": 389,
+  "sha256": "6051c8578f409a566bd52cc354366d880016366fb4e343243116147d9e12bc3e"
+ },
+ {
+  "path": "attiny412-pulsenode.kicad_sch",
+  "bytes": 4302,
+  "sha256": "8a2c92a3f9f9c07a72aa1ff1b0b1f377cd8bcb432ddd435388996d6db3fdeb18"
+ },
+ {
+  "path": "attiny412-pulsenode.kicad_pcb",
+  "bytes": 6637,
+  "sha256": "6de67d77b2bde1a983b4258c7fe798afc5d48a693e55afa546abaca907467d95"
+ },
+ {
+  "path": "bom.csv",
+  "bytes": 963,
+  "sha256": "221b6122f4363a80d405889a48c252c08eded55fc6028a7d9f34e987c506daca"
+ },
+ {
+  "path": "firmware/attiny412_pulsenode.ino",
+  "bytes": 1454,
+  "sha256": "42ee9909a7e49bfcdab1f2eef94dba3538538910117332062fe221bac32b694d"
+ }
+]

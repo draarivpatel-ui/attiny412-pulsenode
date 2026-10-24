@@ -1,25 +1,32 @@
 # ATtiny412 PulseNode
 
-A compact 2-layer capacitance soil moisture and status LED node built around the 8-pin ATtiny412-SSNR SOIC-8 microcontroller. Designed in KiCad 8 for low-power plant hydration telemetry and threshold signaling.
+A compact 2-layer node built around the 8-pin ATtiny412-SSNR (SOIC-8) microcontroller: an ambient-light-driven PWM LED with a button, a status LED, and a piezo click. Designed in KiCad 8.
 
 ![ATtiny412 PulseNode PCB Layout](attiny412_pulsenode_pcb.png)
 
+**Live inspector:** `index.html` (served by GitHub Pages) shows the board in 3D and 2D, the net routing status, and every download. It is generated from the KiCad file, so its numbers always match the board.
+
+## Current state
+
+- The `.kicad_pcb` board is `36 x 26 x 1.6 mm`, 2 copper layers, and carries 4 placed footprints: `U1` (ATtiny412-SSNR), `C1` (100nF 0805), `D1` (amber LED, 0805) and `J1` (1x03 UPDI header).
+- `bom.csv` lists 12 parts (also resistors, a status LED, a phototransistor, a tactile switch and a piezo). Those are not placed on the board yet, so four MCU pins (`PA6`, `PA7`, `PA1`, `PA2`) reach no other pad.
+- 3 connections on `+5V` and `GND` are still unrouted. The Gerbers in `gerbers/` match the board as it stands today and are not a finished order package.
+
 ## Hardware Overview
 
-- **Microcontroller** ATtiny412-SSNR (SOIC-8, 20 MHz internal oscillator, UPDI single-wire programming on `PA0`)
-- **Power Supply** 5.0V and GND via 4-pin 2.54mm header (`J1`), decoupled with a 100nF 0805 ceramic capacitor (`C1`) placed directly across `VDD` (pin 1) and `GND` (pin 8)
-- **Capacitive Sensing** RC relaxation charge-time oscillator using a 1M Ohm 0805 resistor (`R1`) driving `PA1` (`TXD` / charge excitation) and reading threshold decay on `PA2` (`RXD` / ADC channel 2) across the coplanar capacitive probe pads (`J2`)
-- **Status & Alert Indicators** Green LED (`D1`, `PA6`) and Red Alert LED (`D2`, `PA7`) driven through 330 Ohm 0805 current-limiting resistors (`R2`, `R3`)
-- **Board Dimensions** 35.0 mm x 25.0 mm 2-layer FR-4 PCB with M2.5 mounting holes
+- **Microcontroller** ATtiny412-SSNR (SOIC-8, UPDI single-wire programming on `PA0`, header `J1`)
+- **Power** 5.0V and GND, with a 100nF 0805 ceramic capacitor (`C1`) across `VDD` (pin 1) and `GND` (pin 8)
+- **Pin map** (from `firmware/attiny412_pulsenode.ino`) pin 2 `PA6` piezo, pin 3 `PA7` LDR input, pin 4 `PA1` button, pin 5 `PA2` status LED, pin 6 `PA0` UPDI, pin 7 `PA3` PWM LED
+- **Board Dimensions** `36 x 26 mm`, 1.6 mm thick, as measured from the KiCad outline
 
 ## Repository Structure
 
-- `attiny412-pulsenode.kicad_pro` KiCad 8 project configuration
-- `attiny412-pulsenode.kicad_sch` Full schematic with power flags, decoupling capacitor, UPDI header, capacitive probe RC network, and LED indicators
-- `attiny412-pulsenode.kicad_pcb` 2-layer routed PCB layout (`35.0 mm x 25.0 mm`) with front and back copper traces and silkscreen labels
-- `gerbers/attiny412-pulsenode-gerbers.zip` Fabrication-ready Gerber and Excellon drill package (`F.Cu`, `B.Cu`, `F.Mask`, `B.Mask`, `F.SilkS`, `Edge.Cuts`, `.drl`)
-- `bom.csv` Complete Bill of Materials with LCSC and Microchip part numbers
-- `firmware/attiny412_pulsenode.ino` megaTinyCore C++ firmware measuring RC charge cycles on `PA1`/`PA2`, driving threshold alerts on `PA6`/`PA7`, and sleeping in `STANDBY` mode between readings
+- `attiny412-pulsenode.kicad_pro`, `attiny412-pulsenode.kicad_sch`, `attiny412-pulsenode.kicad_pcb` KiCad 8 project, schematic and PCB (copies also in `pcb/`)
+- `gerbers/` Gerber layers and Excellon drill file for the current board, plus `attiny412-pulsenode-gerbers.zip`
+- `bom.csv` Bill of Materials with LCSC, DigiKey and Microchip part numbers
+- `firmware/attiny412_pulsenode.ino` megaTinyCore sketch: the button cycles three modes (ambient auto-dimming, a breathing pulse, a blinking beacon) with a piezo click
+- `cad/` 3D assembly (`.step`, `.FCStd`) of the board with envelope bodies for the parts
+- `assets/`, `tools/`, `index.html` the inspector page and the script (`tools/build_assets.py`) that regenerates its data, STL, STEP, Gerbers and hashes from the KiCad file
 
 ## Interactive Schematic & PCB Viewer
 

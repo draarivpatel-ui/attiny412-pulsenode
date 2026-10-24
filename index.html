@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATtiny412 PulseNode: board and CAD inspector</title>
+<meta name="description" content="Inspect the ATtiny412 PulseNode KiCad board in 3D and 2D, check net routing, and download the Gerbers, STEP assembly, and source files.">
+<link rel="stylesheet" href="assets/sheet.css">
+<link rel="modulepreload" href="assets/three-bundle.min.js">
+<link rel="modulepreload" href="assets/viewer.js">
+<link rel="modulepreload" href="assets/ui.js">
+<style>
+  :root { --accent: oklch(62% 0.14 50); --accent-ink: oklch(42% 0.12 50); --accent-wash: oklch(92% 0.05 60); }
+  [hidden] { display: none !important; }
+  .banner-tag { align-self: start; }
+  #flat svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<a class="skip" href="#model">Skip to the board viewer</a>
+
+<header class="titleblock">
+  <div class="name">
+    <h1>ATtiny412 PulseNode</h1>
+    <p>8-pin SOIC microcontroller board, KiCad 8 source, 3D assembly and Gerbers.</p>
+  </div>
+  <div class="cell"><span class="k">Board</span><span class="v" id="tb-size">loading</span></div>
+  <div class="cell"><span class="k">Layers</span><span class="v">2 copper, FR-4</span></div>
+  <div class="cell"><span class="k">Routing</span><span class="v" id="tb-route">loading</span></div>
+  <div class="cell"><span class="k">Source</span><a class="v" href="https://github.com/draarivpatel-ui/attiny412-pulsenode">GitHub repo</a></div>
+</header>
+
+<nav class="nav" aria-label="Page sections">
+  <a href="#model">Viewer</a>
+  <a href="#nets">Nets</a>
+  <a href="#parts">Parts</a>
+  <a href="#files">Downloads</a>
+  <a href="#notes">Notes</a>
+  <span class="grow"></span>
+  <a href="https://kicanvas.org/?github=https%3A%2F%2Fgithub.com%2Fdraarivpatel-ui%2Fattiny412-pulsenode">Open in KiCanvas</a>
+</nav>
+
+<main>
+  <section class="stage" id="model" aria-label="Board viewer">
+    <div class="stage-grid">
+      <div class="viewport">
+        <div class="toolbar">
+          <div class="seg" id="modes" role="tablist" aria-label="Viewer mode">
+            <button type="button" role="tab" data-tab="d3" aria-selected="true">3D</button>
+            <button type="button" role="tab" data-tab="d2" aria-selected="false">2D board</button>
+          </div>
+          <span class="sep" id="sep1"></span>
+          <div class="seg" id="views" aria-label="Camera view">
+            <button type="button" data-view="iso">Iso</button>
+            <button type="button" data-view="top">Top</button>
+            <button type="button" data-view="front">Front</button>
+            <button type="button" data-view="side">Side</button>
+          </div>
+          <button type="button" class="btn" id="wire" aria-pressed="false">Wireframe</button>
+        </div>
+        <div class="canvas" id="canvas">
+          <div class="gl" id="gl"></div>
+          <div class="gl" id="flat" hidden><svg id="board" role="img" aria-label="Board layout drawn from the KiCad file"></svg></div>
+          <div class="fallback" id="fallback"><p>The 3D view needs WebGL and a web server. Use the 2D board tab or the downloads below.</p></div>
+          <div class="hint" id="hint">Drag to orbit, scroll to zoom, arrow keys to pan</div>
+          <div class="legend" id="legend" hidden>
+            <span><i style="background: oklch(60% 0.17 25)"></i>Front copper</span>
+            <span><i style="background: oklch(55% 0.13 250)"></i>Back copper</span>
+            <span><i style="background: var(--color-paper-3)"></i>Silkscreen</span>
+            <span>Pads are coloured by net</span>
+          </div>
+        </div>
+      </div>
+      <aside class="inspector" aria-live="polite">
+        <div>
+          <h2 id="insp-title">Board</h2>
+          <p class="sub" id="insp-sub">Measured from the files in this repo.</p>
+        </div>
+        <dl class="kv" id="insp-kv"></dl>
+        <ul class="checks" id="insp-checks"></ul>
+      </aside>
+    </div>
+  </section>
+
+  <section id="status" aria-label="Build status">
+    <div class="wrap">
+      <div class="status-banner" id="banner">
+        <span class="badge flag banner-tag">Status</span>
+        <p id="banner-text">Reading the board data.</p>
+      </div>
+      <noscript><p>This page draws the board from JSON with JavaScript. The downloads below work without it.</p></noscript>
+    </div>
+  </section>
+
+  <section id="nets">
+    <div class="wrap">
+      <div class="head"><h2>Nets and routing</h2><p>Select a row to light that net up in the 2D board view.</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Net</th><th>Pads</th><th class="num">Tracks</th><th class="num">Unrouted</th><th>Status</th></tr></thead>
+          <tbody id="net-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="parts">
+    <div class="wrap">
+      <div class="head"><h2>Parts on the board</h2><p>Footprints placed in the .kicad_pcb file.</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ref</th><th>Value</th><th>Footprint</th><th class="num">X mm</th><th class="num">Y mm</th></tr></thead>
+          <tbody id="part-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="wrap">
+      <div class="head"><h2>Downloads</h2><p>SHA-256 values come from assets/files.json, or are computed in your browser for files it does not list.</p></div>
+      <div class="bench" id="bench"></div>
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="wrap">
+      <div class="head"><h2>Notes</h2><p>Where the numbers on this page come from.</p></div>
+      <div class="notes">
+        <div class="note"><h3>Source of truth</h3><p>The KiCad file <code>attiny412-pulsenode.kicad_pcb</code> is parsed by <code>tools/build_assets.py</code>. Nets, pads, tracks and unrouted counts are computed from that parse, not typed in.</p></div>
+        <div class="note"><h3>3D model</h3><p>The board and part bodies are simple extruded envelopes written to <code>assets/board.stl</code>, <code>assets/parts.stl</code> and the STEP assembly. They show size and placement, not manufacturer part models.</p></div>
+        <div class="note"><h3>Rebuild</h3><p>With build123d installed, run <code>python tools/build_assets.py</code> to regenerate the JSON, STL, STEP, Gerbers and hashes.</p></div>
+        <div class="note"><h3>Open it locally</h3><p>This page loads JSON and ES modules, so serve the folder (for example <code>python3 -m http.server</code>) instead of opening the file directly.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>ATtiny412 PulseNode, KiCad 8 design.</span>
+    <span>three.js is vendored under its MIT license, IBM Plex under the SIL OFL. Licenses are in assets/.</span>
+  </div>
+</footer>
+
+<script type="module">
+import { createViewer } from "./assets/viewer.js";
+import { h, svg, num, kv, tabs, bench } from "./assets/ui.js";
+
+const $ = (s) => document.querySelector(s);
+const banner = $("#banner-text");
+
+try {
+  const [pcb, files, bomText] = await Promise.all([
+    fetch("assets/pcb.json").then((r) => r.json()),
+    fetch("assets/files.json").then((r) => r.json()),
+    fetch("bom.csv").then((r) => (r.ok ? r.text() : "")).catch(() => ""),
+  ]);
+
+  const unrouted = pcb.connectivity.reduce((s, n) => s + n.missing, 0);
+  const lonely = pcb.connectivity.filter((n) => n.single_pad);
+  const placed = pcb.footprints.length;
+  const bomRows = bomText.trim().split(/\r?\n/).slice(1).filter(Boolean).map((l) => l.split(","));
+  const bomParts = bomRows.reduce((s, r) => s + (parseInt(r[3], 10) || 0), 0);
+
+  // ---- title block and banner, all from the data
+  $("#tb-size").textContent = `${pcb.cad.size[0]} x ${pcb.cad.size[1]} x ${pcb.cad.size[2]} mm`;
+  $("#tb-route").textContent = unrouted ? `${unrouted} unrouted` : "fully routed";
+  const bits = [];
+  if (unrouted) bits.push(`${unrouted} connection${unrouted === 1 ? " is" : "s are"} still unrouted`);
+  if (lonely.length) bits.push(`${lonely.length} nets (${lonely.map((n) => n.pads[0]).join(", ")}) reach only one pad because no matching part is placed`);
+  if (bomParts && bomParts !== placed) bits.push(`bom.csv lists ${bomParts} parts but the board carries ${placed}`);
+  if (bits.length) {
+    banner.textContent = `Work in progress, not ready to order. ${bits.join("; ")}. The Gerbers in the downloads match the board as it stands.`;
+  } else {
+    banner.textContent = "Every net is routed and every BOM part is placed on the board.";
+    $("#banner .badge").className = "badge ok banner-tag";
+  }
+
+  // ---- 3D viewer
+  const viewer = await createViewer($("#gl"), {
+    meshes: [
+      { key: "board", url: "assets/board.stl", color: "--color-ok" },
+      { key: "parts", url: "assets/parts.stl", color: "--color-ink-2" },
+    ],
+    label: "ATtiny412 PulseNode board with part envelopes",
+  });
+  if (!viewer) {
+    $("#fallback").classList.add("show");
+    $("#views").hidden = true;
+    $("#wire").hidden = true;
+    $("#hint").hidden = true;
+  } else {
+    document.querySelectorAll("#views button").forEach((b) => b.addEventListener("click", () => viewer.frame(b.dataset.view)));
+    $("#wire").addEventListener("click", (e) => {
+      const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+      e.currentTarget.setAttribute("aria-pressed", on);
+      viewer.setWireframe(on);
+    });
+  }
+
+  // ---- 2D board from pcb.json (KiCad coordinates, y down, as KiCad draws them)
+  const netIds = Object.keys(pcb.nets).filter((k) => k !== "0");
+  const netColor = (id) => `oklch(58% 0.14 ${(netIds.indexOf(String(id)) * 47 + 20) % 360})`;
+  let selectedNet = null;
+  const board = $("#board");
+  const o = pcb.outline;
+  const pad2 = 4;
+  board.setAttribute("viewBox", `${o.x - pad2} ${o.y - pad2} ${o.w + 2 * pad2} ${o.h + 2 * pad2}`);
+  board.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+  function drawBoard() {
+    const kids = [];
+    kids.push(svg("rect", { x: o.x, y: o.y, width: o.w, height: o.h, fill: "oklch(88% 0.05 152)", stroke: "var(--color-ink)", "stroke-width": o.width * 2 }));
+    pcb.footprints.forEach((f) => (f.rects || []).forEach((r) =>
+      kids.push(svg("rect", { x: r.x1, y: r.y1, width: r.x2 - r.x1, height: r.y2 - r.y1, fill: "none", stroke: "var(--color-ink-2)", "stroke-width": r.width }))));
+    pcb.segments.forEach((s) => {
+      const dim = selectedNet !== null && s.net !== selectedNet;
+      kids.push(svg("line", { x1: s.x1, y1: s.y1, x2: s.x2, y2: s.y2, stroke: s.layer === "B.Cu" ? "oklch(55% 0.13 250)" : "oklch(60% 0.17 25)",
+        "stroke-width": s.width, "stroke-linecap": "round", opacity: dim ? 0.2 : 0.95 }));
+    });
+    pcb.footprints.forEach((f) => f.pads.forEach((p) => {
+      const dim = selectedNet !== null && p.net !== selectedNet;
+      const common = { fill: netColor(p.net), stroke: "var(--color-ink)", "stroke-width": 0.05, opacity: dim ? 0.25 : 1 };
+      const title = svg("title", {}, `${p.ref}.${p.number} on ${p.net_name || "no net"}`);
+      const shape = p.shape === "circle" || p.shape === "oval"
+        ? svg("ellipse", { cx: p.x, cy: p.y, rx: p.w / 2, ry: p.h / 2, ...common }, title)
+        : svg("rect", { x: p.x - p.w / 2, y: p.y - p.h / 2, width: p.w, height: p.h, rx: (p.rratio || 0) * Math.min(p.w, p.h), ...common }, title);
+      kids.push(shape);
+      if (p.drill) kids.push(svg("circle", { cx: p.x, cy: p.y, r: p.drill / 2, fill: "var(--color-paper)", stroke: "var(--color-ink)", "stroke-width": 0.04 }));
+    }));
+    pcb.footprints.forEach((f) => kids.push(svg("text", { x: f.ref_at[0], y: f.ref_at[1], "font-size": 1.1, "text-anchor": "middle" }, f.ref)));
+    pcb.texts.forEach((t) => kids.push(svg("text", { x: t.x, y: t.y, "font-size": t.size, "text-anchor": "middle", opacity: 0.8 }, t.text)));
+    board.replaceChildren(...kids);
+  }
+  drawBoard();
+
+  const selectMode = tabs($("#modes"), { d3: $("#gl"), d2: $("#flat") }, (id) => {
+    $("#legend").hidden = id !== "d2";
+    $("#hint").hidden = id !== "d3" || !viewer;
+    if (viewer) { $("#views").hidden = id !== "d3"; $("#wire").hidden = id !== "d3"; $("#sep1").hidden = id !== "d3"; }
+  });
+
+  // ---- inspector
+  kv($("#insp-kv"), [
+    ["Outline", `${num(o.w, 1)} x ${num(o.h, 1)} mm`],
+    ["Thickness", `${num(pcb.cad.size[2], 1)} mm`],
+    ["Footprints", String(placed)],
+    ["Nets", String(netIds.length)],
+    ["Track segments", String(pcb.segments.length)],
+    ["Unrouted", String(unrouted)],
+    ["STEP volume", `${num(pcb.cad.volume, 1)} mm3`],
+    ["STEP valid", pcb.cad.valid ? "yes" : "no"],
+  ]);
+  if (viewer) {
+    const st = viewer.stats("board");
+    const dd = $("#insp-kv");
+    dd.append(h("dt", { text: "Board STL triangles" }), h("dd", { text: String(st.triangles) }));
+  }
+  $("#insp-checks").replaceChildren(
+    h("li", {}, h("span", { class: `badge ${pcb.cad.valid ? "ok" : "flag"}`, text: pcb.cad.valid ? "OK" : "FLAG" }), "STEP assembly is a valid solid"),
+    h("li", {}, h("span", { class: `badge ${unrouted ? "flag" : "ok"}`, text: unrouted ? "FLAG" : "OK" }), unrouted ? `${unrouted} unrouted connections` : "All connections routed"),
+    h("li", {}, h("span", { class: `badge ${lonely.length ? "flag" : "ok"}`, text: lonely.length ? "FLAG" : "OK" }), lonely.length ? `${lonely.length} nets have a single pad` : "No single-pad nets"),
+  );
+
+  // ---- nets table
+  const rows = $("#net-rows");
+  const idOf = (name) => Object.entries(pcb.nets).find(([, v]) => v === name)?.[0];
+  rows.replaceChildren(...pcb.connectivity.map((n) => {
+    const tr = h("tr", { tabindex: 0, "aria-selected": "false" },
+      h("td", { class: "data", text: n.net }),
+      h("td", { class: "data", text: n.pads.join(", ") }),
+      h("td", { class: "num", text: String(n.tracks) }),
+      h("td", { class: "num", text: String(n.missing) }),
+      h("td", {}, n.single_pad ? h("span", { class: "badge plain", text: "single pad" })
+        : n.missing ? h("span", { class: "badge flag", text: "unrouted" }) : h("span", { class: "badge ok", text: "routed" })));
+    const pick = () => {
+      const id = Number(idOf(n.net));
+      selectedNet = selectedNet === id ? null : id;
+      rows.querySelectorAll("tr").forEach((r) => r.setAttribute("aria-selected", "false"));
+      if (selectedNet !== null) tr.setAttribute("aria-selected", "true");
+      drawBoard();
+      selectMode("d2");
+      $("#model").scrollIntoView({ block: "nearest" });
+    };
+    tr.addEventListener("click", pick);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    return tr;
+  }));
+
+  // ---- parts table
+  $("#part-rows").replaceChildren(...pcb.footprints.map((f) => h("tr", {},
+    h("td", { class: "data", text: f.ref }),
+    h("td", { text: f.value }),
+    h("td", { class: "data", text: f.name }),
+    h("td", { class: "num", text: num(f.x - o.x, 2) }),
+    h("td", { class: "num", text: num(f.y - o.y, 2) }))));
+
+  // ---- downloads
+  const groups = [
+    { title: "Fabrication", files: [
+      { path: "gerbers/attiny412-pulsenode-gerbers.zip", desc: "All Gerber layers and the drill file in one zip" },
+      { path: "bom.csv", desc: "Bill of materials" },
+    ] },
+    { title: "3D and CAD", files: [
+      { path: "cad/attiny412_pulsenode_assembly.step", desc: "Board plus envelope bodies, STEP" },
+      { path: "cad/attiny412_pulsenode_assembly.FCStd", desc: "FreeCAD source assembly" },
+      { path: "assets/board.stl", desc: "Board mesh used by the viewer" },
+      { path: "assets/parts.stl", desc: "Part envelope mesh used by the viewer" },
+    ] },
+    { title: "KiCad and firmware", files: [
+      { path: "attiny412-pulsenode.kicad_pcb", desc: "PCB layout" },
+      { path: "attiny412-pulsenode.kicad_sch", desc: "Schematic" },
+      { path: "firmware/attiny412_pulsenode.ino", desc: "megaTinyCore firmware sketch" },
+    ] },
+  ];
+  const known = new Set(files.map((m) => m.path));
+  if (globalThis.crypto?.subtle) {
+    await Promise.all(groups.flatMap((g) => g.files).filter((f) => !known.has(f.path)).map(async (f) => {
+      try {
+        const buf = await fetch(f.path).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(f.path))));
+        const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map((b) => b.toString(16).padStart(2, "0")).join("");
+        files.push({ path: f.path, bytes: buf.byteLength, sha256: hex });
+      } catch (e) { console.warn("no hash for", f.path); }
+    }));
+  }
+  bench($("#bench"), groups, files);
+} catch (err) {
+  banner.textContent = "Could not load the board data. Serve this folder over HTTP and reload.";
+  console.error(err);
+}
+</script>
+</body>
+</html>

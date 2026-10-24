@@ -1,0 +1,441 @@
+{
+ "nets": {
+  "0": "",
+  "1": "+5V",
+  "2": "GND",
+  "3": "PA6_PIEZO",
+  "4": "PA7_LDR",
+  "5": "PA1_BTN",
+  "6": "PA2_STATUS",
+  "7": "PA0_UPDI",
+  "8": "PA3_PWM"
+ },
+ "outline": {
+  "x": 100.0,
+  "y": 85.0,
+  "w": 36.0,
+  "h": 26.0,
+  "width": 0.15
+ },
+ "texts": [
+  {
+   "text": "ATtiny412 PulseNode v1.0",
+   "x": 118.0,
+   "y": 87.2,
+   "layer": "F.SilkS",
+   "size": 1.2
+  },
+  {
+   "text": "8-Pin SOIC Ambient & PWM Node",
+   "x": 118.0,
+   "y": 109.2,
+   "layer": "F.SilkS",
+   "size": 1.0
+  }
+ ],
+ "footprints": [
+  {
+   "name": "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm",
+   "ref": "U1",
+   "value": "ATtiny412-SSNR",
+   "x": 118.0,
+   "y": 98.0,
+   "ref_at": [
+    118.0,
+    94.2
+   ],
+   "rects": [
+    {
+     "x1": 115.8,
+     "y1": 95.4,
+     "x2": 120.2,
+     "y2": 100.6,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 115.3,
+     "y": 96.095,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 1,
+     "net_name": "+5V",
+     "ref": "U1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 115.3,
+     "y": 97.365,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 3,
+     "net_name": "PA6_PIEZO",
+     "ref": "U1"
+    },
+    {
+     "number": "3",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 115.3,
+     "y": 98.635,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 4,
+     "net_name": "PA7_LDR",
+     "ref": "U1"
+    },
+    {
+     "number": "4",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 115.3,
+     "y": 99.905,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 5,
+     "net_name": "PA1_BTN",
+     "ref": "U1"
+    },
+    {
+     "number": "5",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 120.7,
+     "y": 99.905,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 6,
+     "net_name": "PA2_STATUS",
+     "ref": "U1"
+    },
+    {
+     "number": "6",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 120.7,
+     "y": 98.635,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 7,
+     "net_name": "PA0_UPDI",
+     "ref": "U1"
+    },
+    {
+     "number": "7",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 120.7,
+     "y": 97.365,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 8,
+     "net_name": "PA3_PWM",
+     "ref": "U1"
+    },
+    {
+     "number": "8",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 120.7,
+     "y": 96.095,
+     "w": 1.5,
+     "h": 0.6,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "U1"
+    }
+   ]
+  },
+  {
+   "name": "Capacitor_SMD:C_0805_2012Metric",
+   "ref": "C1",
+   "value": "100nF",
+   "x": 110.0,
+   "y": 92.0,
+   "ref_at": [
+    110.0,
+    90.2
+   ],
+   "rects": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 109.0,
+     "y": 92.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 1,
+     "net_name": "+5V",
+     "ref": "C1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 111.0,
+     "y": 92.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "C1"
+    }
+   ]
+  },
+  {
+   "name": "LED_SMD:LED_0805_2012Metric",
+   "ref": "D1",
+   "value": "PWM_AMBER",
+   "x": 128.0,
+   "y": 92.0,
+   "ref_at": [
+    128.0,
+    90.2
+   ],
+   "rects": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 127.0,
+     "y": 92.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 8,
+     "net_name": "PA3_PWM",
+     "ref": "D1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 129.0,
+     "y": 92.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "D1"
+    }
+   ]
+  },
+  {
+   "name": "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
+   "ref": "J1",
+   "value": "UPDI_HDR",
+   "x": 131.0,
+   "y": 101.0,
+   "ref_at": [
+    131.0,
+    98.5
+   ],
+   "rects": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "thru_hole",
+     "shape": "rect",
+     "x": 131.0,
+     "y": 101.0,
+     "w": 1.7,
+     "h": 1.7,
+     "drill": 1.0,
+     "rratio": 0.0,
+     "net": 1,
+     "net_name": "+5V",
+     "ref": "J1"
+    },
+    {
+     "number": "2",
+     "kind": "thru_hole",
+     "shape": "oval",
+     "x": 131.0,
+     "y": 103.54,
+     "w": 1.7,
+     "h": 1.7,
+     "drill": 1.0,
+     "rratio": 0.0,
+     "net": 7,
+     "net_name": "PA0_UPDI",
+     "ref": "J1"
+    },
+    {
+     "number": "3",
+     "kind": "thru_hole",
+     "shape": "oval",
+     "x": 131.0,
+     "y": 106.08,
+     "w": 1.7,
+     "h": 1.7,
+     "drill": 1.0,
+     "rratio": 0.0,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "J1"
+    }
+   ]
+  }
+ ],
+ "segments": [
+  {
+   "x1": 115.3,
+   "y1": 96.095,
+   "x2": 109.0,
+   "y2": 92.0,
+   "width": 0.35,
+   "layer": "F.Cu",
+   "net": 1
+  },
+  {
+   "x1": 120.7,
+   "y1": 96.095,
+   "x2": 129.0,
+   "y2": 92.0,
+   "width": 0.35,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 120.7,
+   "y1": 97.365,
+   "x2": 127.0,
+   "y2": 92.0,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 8
+  },
+  {
+   "x1": 120.7,
+   "y1": 98.635,
+   "x2": 131.0,
+   "y2": 103.54,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 7
+  }
+ ],
+ "connectivity": [
+  {
+   "net": "+5V",
+   "pads": [
+    "U1.1",
+    "C1.1",
+    "J1.1"
+   ],
+   "tracks": 1,
+   "missing": 1,
+   "single_pad": false
+  },
+  {
+   "net": "GND",
+   "pads": [
+    "U1.8",
+    "C1.2",
+    "D1.2",
+    "J1.3"
+   ],
+   "tracks": 1,
+   "missing": 2,
+   "single_pad": false
+  },
+  {
+   "net": "PA6_PIEZO",
+   "pads": [
+    "U1.2"
+   ],
+   "tracks": 0,
+   "missing": 0,
+   "single_pad": true
+  },
+  {
+   "net": "PA7_LDR",
+   "pads": [
+    "U1.3"
+   ],
+   "tracks": 0,
+   "missing": 0,
+   "single_pad": true
+  },
+  {
+   "net": "PA1_BTN",
+   "pads": [
+    "U1.4"
+   ],
+   "tracks": 0,
+   "missing": 0,
+   "single_pad": true
+  },
+  {
+   "net": "PA2_STATUS",
+   "pads": [
+    "U1.5"
+   ],
+   "tracks": 0,
+   "missing": 0,
+   "single_pad": true
+  },
+  {
+   "net": "PA0_UPDI",
+   "pads": [
+    "U1.6",
+    "J1.2"
+   ],
+   "tracks": 1,
+   "missing": 0,
+   "single_pad": false
+  },
+  {
+   "net": "PA3_PWM",
+   "pads": [
+    "U1.7",
+    "D1.1"
+   ],
+   "tracks": 1,
+   "missing": 0,
+   "single_pad": false
+  }
+ ],
+ "cad": {
+  "size": [
+   36.0,
+   26.0,
+   1.6
+  ],
+  "volume": 1493.83,
+  "valid": true
+ }
+}
