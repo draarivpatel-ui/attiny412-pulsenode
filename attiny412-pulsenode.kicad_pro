@@ -1,0 +1,21 @@
+{
+  "board": {
+    "design_settings": {
+      "defaults": {
+        "board_outline_line_width": 0.1,
+        "copper_line_width": 0.25,
+        "copper_text_size_h": 1.5,
+        "copper_text_size_v": 1.5
+      }
+    }
+  },
+  "meta": {
+    "filename": "attiny412-pulsenode.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "drawing": {
+      "default_line_thickness": 6.0
+    }
+  }
+}
