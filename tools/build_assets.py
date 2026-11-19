@@ -213,7 +213,6 @@ class Gerber:
                 "%FSLAX46Y46*%", "G04 Gerber format 4.6, absolute, unit mm*", "%MOMM*%"]
         for key, code in self.apertures.items():
             dims = ",".join(f"{d:.6f}" for d in key[1:])
-            sep = "X" if key[0] != "C" else ""
             if key[0] == "R":
                 dims = "X".join(f"{d:.6f}" for d in key[1:])
                 head.append(f"%ADD{code}R,{dims}*%")
