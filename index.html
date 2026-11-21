@@ -155,12 +155,13 @@ import { h, svg, num, kv, tabs, bench } from "./assets/ui.js";
 const $ = (s) => document.querySelector(s);
 const banner = $("#banner-text");
 
+let files = [];
 try {
-  const [pcb, files, bomText] = await Promise.all([
+  const [pcb, bomText] = await Promise.all([
     fetch("assets/pcb.json").then((r) => r.json()),
-    fetch("assets/files.json").then((r) => r.json()),
     fetch("bom.csv").then((r) => (r.ok ? r.text() : "")).catch(() => ""),
   ]);
+  files = await fetch("assets/files.json").then((r) => (r.ok ? r.json() : [])).catch(() => []);
 
   const unrouted = pcb.connectivity.reduce((s, n) => s + n.missing, 0);
   const lonely = pcb.connectivity.filter((n) => n.single_pad);
@@ -196,7 +197,6 @@ try {
     console.warn("3D viewer unavailable:", err);
   }
   if (!viewer) {
-    $("#fallback").classList.add("show");
     $("#views").hidden = true;
     $("#wire").hidden = true;
     $("#hint").hidden = true;
@@ -249,6 +249,7 @@ try {
   const selectMode = tabs($("#modes"), { d3: $("#gl"), d2: $("#flat") }, (id) => {
     $("#legend").hidden = id !== "d2";
     $("#hint").hidden = id !== "d3" || !viewer;
+    $("#fallback").classList.toggle("show", id === "d3" && !viewer);
     if (viewer) { $("#views").hidden = id !== "d3"; $("#wire").hidden = id !== "d3"; $("#sep1").hidden = id !== "d3"; }
   });
 
@@ -260,7 +261,7 @@ try {
     ["Nets", String(netIds.length)],
     ["Track segments", String(pcb.segments.length)],
     ["Unrouted", String(unrouted)],
-    ["STEP volume", `${num(pcb.cad.volume, 1)} mm3`],
+    ["Board volume", `${num(pcb.cad.volume, 1)} mm3`],
     ["STEP valid", pcb.cad.valid ? "yes" : "no"],
   ]);
   if (viewer) {
@@ -309,7 +310,13 @@ try {
     h("td", { class: "num", text: num(f.x - o.x, 2) }),
     h("td", { class: "num", text: num(f.y - o.y, 2) }))));
 
-  // ---- downloads
+} catch (err) {
+  banner.textContent = "Could not load the board data. Serve this folder over HTTP and reload.";
+  console.error(err);
+}
+
+try {
+  // ---- downloads; renders even if the board data above failed
   const groups = [
     { title: "Fabrication", files: [
       { path: "gerbers/attiny412-pulsenode-gerbers.zip", desc: "All Gerber layers and the drill file in one zip" },
@@ -339,8 +346,7 @@ try {
   }
   bench($("#bench"), groups, files);
 } catch (err) {
-  banner.textContent = "Could not load the board data. Serve this folder over HTTP and reload.";
-  console.error(err);
+  console.error("downloads section:", err);
 }
 </script>
 </body>

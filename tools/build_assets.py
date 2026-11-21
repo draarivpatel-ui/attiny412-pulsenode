@@ -67,6 +67,9 @@ def _rot(x, y, deg):
 
 
 def _quarter_turns(deg):
+    # Positions are exact for any angle via _rot, but pad w/h are only swapped at
+    # quarter turns; non-90-degree footprints and B.Cu (unmirrored) placements are
+    # not handled. Revisit before the first rotated or bottom-side part.
     return int(round(deg / 90.0)) % 4
 
 

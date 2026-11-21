@@ -72,6 +72,62 @@ test('viewer.js falls back instead of rendering black on a missing CSS token', (
   assert.match(viewerSrc, /if\s*\(!value\)\s*return\s+new\s+T\.Color\(fallback\)/);
 });
 
+test('ui.js exposes every helper the page imports, plus Home/End tab keys', async () => {
+  const src = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8');
+  const ui = await import('data:text/javascript;charset=utf-8,' + encodeURIComponent(src));
+  for (const name of ['h', 'svg', 'num', 'mm', 'fmtBytes', 'copy', 'kv', 'tabs', 'bench', 'safePath']) {
+    assert.equal(typeof ui[name], 'function', `ui.js missing export ${name}`);
+  }
+  assert.match(src, /e\.key\s*===\s*"Home"[\s\S]{0,90}"End"/, 'tablist lost Home/End keys');
+});
+
+test('download hrefs are confined to same-origin relative paths', async () => {
+  const src = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8');
+  const ui = await import('data:text/javascript;charset=utf-8,' + encodeURIComponent(src));
+  for (const good of ['bom.csv', 'gerbers/attiny412-pulsenode-gerbers.zip', 'cad/attiny412_pulsenode_assembly.FCStd']) {
+    assert.equal(ui.safePath(good), good, `safe path rejected: ${good}`);
+  }
+  for (const bad of ['javascript:window.__x=1', 'https://evil.example/x', '../../etc/passwd', '/abs/path', 'a b.csv', 'C:\\tmp\\x', '', '.hidden', null, 42, {}]) {
+    assert.equal(ui.safePath(bad), null, `unsafe path allowed: ${JSON.stringify(bad)}`);
+  }
+});
+
+test('files.json and pcb.json failures cannot take the downloads section down', () => {
+  assert.match(html, /files\.json"\)\.then\(\(r\)\s*=>\s*\(r\.ok\s*\?\s*r\.json\(\)\s*:\s*\[\]\)\)\.catch\(\(\)\s*=>\s*\[\]\)/, 'files.json fetch lacks its own catch');
+  const firstCatch = html.indexOf('} catch (err)');
+  const secondTry = html.indexOf('try {', firstCatch);
+  const benchCall = html.indexOf('bench($("#bench")');
+  assert.ok(secondTry > firstCatch && benchCall > secondTry, 'bench is still inside the board-data try');
+});
+
+test('board volume row is labeled as the board, not the STEP assembly', () => {
+  assert.ok(!html.includes('STEP volume'), 'mislabeled STEP volume row');
+  assert.ok(html.includes('Board volume'));
+});
+
+test('button uses time-based debounce instead of a blind delay', () => {
+  const fw = fs.readFileSync(path.join(root, 'firmware/attiny412_pulsenode.ino'), 'utf8');
+  assert.match(fw, /stableBtn/, 'no stable-state tracking');
+  assert.match(fw, /lastChange\s*=\s*millis\(\)/, 'no change timestamp');
+  assert.match(fw, /millis\(\)\s*-\s*lastChange\s*>\s*\d+/, 'no debounce window');
+  assert.ok(!/delay\(180\)/.test(fw), 'blind 180 ms delay still present');
+});
+
+test('files.json hashes match the bytes on disk', () => {
+  const crypto = require('node:crypto');
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/files.json'), 'utf8'));
+  assert.ok(manifest.length >= 10, 'manifest shrank unexpectedly');
+  for (const m of manifest) {
+    const buf = fs.readFileSync(path.join(root, m.path));
+    assert.equal(crypto.createHash('sha256').update(buf).digest('hex'), m.sha256, `hash drift: ${m.path}`);
+    assert.equal(buf.byteLength, m.bytes, `size drift: ${m.path}`);
+  }
+});
+
+test('fallback overlay yields to the 2D board tab', () => {
+  assert.match(html, /classList\.toggle\("show",\s*id\s*===\s*"d3"\s*&&\s*!viewer\)/, 'fallback not gated to the 3D tab');
+});
+
 test('no innerHTML-style injection sinks anywhere in the page or shared JS', () => {
   const js = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8') + viewerSrc;
   for (const sink of ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'document.write']) {
@@ -110,7 +166,7 @@ test('bom.csv parses cleanly, has no formula-injection cells, and quantities sum
   for (const r of data) {
     const c = r.split(',');
     assert.equal(c.length, 7, `malformed row: ${r}`);
-    assert.ok(!/^[=+\-@]/.test(c[0]) && !/^[=+\-@]/.test(c[1]) && !/^[=+\-@]/.test(c[4]), `formula-style cell in row: ${r}`);
+    for (const cell of c) assert.ok(!/^[=+\-@]/.test(cell), `formula-style cell in row: ${r}`);
     qty += parseInt(c[3], 10) || 0;
     refs.add(c[0]);
   }

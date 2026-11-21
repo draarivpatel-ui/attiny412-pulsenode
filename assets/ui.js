@@ -73,12 +73,27 @@ export function tabs(list, panels, onChange) {
   buttons.forEach((b, i) => {
     b.addEventListener("click", () => select(b.dataset.tab));
     b.addEventListener("keydown", (e) => {
+      if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        select(buttons[e.key === "Home" ? 0 : buttons.length - 1].dataset.tab, true);
+        return;
+      }
       const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
       if (d) { e.preventDefault(); select(buttons[(i + d + buttons.length) % buttons.length].dataset.tab, true); }
     });
   });
+  Object.entries(panels).forEach(([k, el]) => {
+    el.setAttribute("role", "tabpanel");
+    const btn = buttons.find((b) => b.dataset.tab === k);
+    if (btn && el.id) btn.setAttribute("aria-controls", el.id);
+  });
   select(buttons.find((b) => b.getAttribute("aria-selected") === "true")?.dataset.tab ?? buttons[0].dataset.tab);
   return select;
+}
+
+/** Same-origin relative download path, or null. Rejects schemes (javascript:), absolute paths and traversal. */
+export function safePath(p) {
+  return typeof p === "string" && /^\w[\w./-]*$/.test(p) && !p.includes("..") ? p : null;
 }
 
 /** Download bench. groups: [{title, files:[{path, desc}]}]. manifest: files.json rows. */
@@ -88,13 +103,16 @@ export function bench(root, groups, manifest) {
     h("div", { class: "bench-group", text: g.title }),
     ...g.files.map((f) => {
       const m = by.get(f.path);
+      const href = safePath(f.path);
       const copyBtn = m ? h("button", { class: "chip-btn", type: "button", "aria-label": `Copy SHA-256 of ${f.path}`,
         onclick: (e) => copy(m.sha256, e.currentTarget) }, "Copy SHA-256") : null;
       return h("div", { class: "file" },
         h("div", {}, h("span", { class: "fname", text: f.path }), m && h("span", { class: "hash", text: `sha256 ${m.sha256.slice(0, 16)}...` })),
         h("div", { class: "fdesc", text: f.desc }),
         h("div", { class: "fsize", text: m ? fmtBytes(m.bytes) : "" }),
-        h("div", { class: "actions" }, copyBtn, h("a", { class: "btn primary", href: f.path, download: f.path.split("/").pop() }, "Download")));
+        h("div", { class: "actions" }, copyBtn, href
+          ? h("a", { class: "btn primary", href, download: href.split("/").pop() }, "Download")
+          : h("span", { class: "btn", "aria-disabled": "true" }, "Download")));
     }),
   ]));
 }

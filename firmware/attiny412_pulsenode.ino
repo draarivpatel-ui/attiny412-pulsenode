@@ -22,13 +22,20 @@ void setup() {
 
 void loop() {
   static bool lastBtn = HIGH;
+  static bool stableBtn = HIGH;
+  static uint32_t lastChange = 0;
   bool btn = digitalRead(PIN_BTN);
-  if (lastBtn == HIGH && btn == LOW) {
-    mode = (mode + 1) % 3;
-    tone(PIN_BUZZER, 1760, 45);
-    delay(180);
+  if (btn != lastBtn) {
+    lastChange = millis();
+    lastBtn = btn;
   }
-  lastBtn = btn;
+  if (btn != stableBtn && millis() - lastChange > 40) {
+    stableBtn = btn;
+    if (stableBtn == LOW) {
+      mode = (mode + 1) % 3;
+      tone(PIN_BUZZER, 1760, 45);
+    }
+  }
 
   uint16_t rawLdr = analogRead(PIN_LDR);
   if (mode == 0) {
