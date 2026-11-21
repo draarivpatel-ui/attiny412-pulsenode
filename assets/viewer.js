@@ -5,6 +5,7 @@ const probe = document.createElement("canvas").getContext("2d", { willReadFreque
 
 /** Resolve any CSS colour the browser understands (including oklch) to a three.js Color. */
 export function cssColor(value, fallback = "#888888") {
+  if (!value) return new T.Color(fallback);
   try {
     probe.clearRect(0, 0, 1, 1);
     probe.fillStyle = "#000";

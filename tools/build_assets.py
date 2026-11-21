@@ -12,6 +12,7 @@ Gerber coordinates use the board lower-left corner as origin, +Y up.
 """
 import hashlib
 import json
+import math
 import re
 import zipfile
 from pathlib import Path
@@ -38,7 +39,7 @@ def parse_sexp(text):
         if tok.startswith('"'):
             return ("s", tok[1:-1])
         try:
-            return float(tok) if re.fullmatch(r"-?\d+(\.\d+)?", tok) else tok
+            return float(tok) if re.fullmatch(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?", tok) else tok
         except ValueError:
             return tok
 
@@ -56,6 +57,17 @@ def find_all(node, key):
 def find_one(node, key):
     r = find_all(node, key)
     return r[0] if r else None
+
+
+def _rot(x, y, deg):
+    if not deg:
+        return x, y
+    r = math.radians(deg)
+    return x * math.cos(r) - y * math.sin(r), x * math.sin(r) + y * math.cos(r)
+
+
+def _quarter_turns(deg):
+    return int(round(deg / 90.0)) % 4
 
 
 def load_board():
@@ -77,14 +89,18 @@ def load_board():
     for f in find_all(tree, "footprint"):
         at = find_one(f, "at")
         fx, fy = at[1], at[2]
+        frot = at[3] if len(at) > 3 else 0
         props = {sval(p[1]): sval(p[2]) for p in find_all(f, "property")}
         ref_prop = [p for p in find_all(f, "property") if sval(p[1]) == "Reference"][0]
         ref_off = find_one(ref_prop, "at")
+        refx, refy = _rot(ref_off[1], ref_off[2], frot)
         rects = []
         for r in find_all(f, "fp_rect"):
             a = find_one(r, "start")
             b = find_one(r, "end")
-            rects.append(dict(x1=fx + a[1], y1=fy + a[2], x2=fx + b[1], y2=fy + b[2],
+            (x1, y1), (x2, y2) = _rot(a[1], a[2], frot), _rot(b[1], b[2], frot)
+            rects.append(dict(x1=fx + min(x1, x2), y1=fy + min(y1, y2),
+                              x2=fx + max(x1, x2), y2=fy + max(y1, y2),
                               layer=sval(find_one(r, "layer")[1]),
                               width=find_one(find_one(r, "stroke"), "width")[1]))
         pads = []
@@ -94,15 +110,20 @@ def load_board():
             net = find_one(p, "net")
             drill = find_one(p, "drill")
             rr = find_one(p, "roundrect_rratio")
+            prot = pat[3] if len(pat) > 3 else 0
+            px, py = _rot(pat[1], pat[2], frot)
+            pw, ph = size[1], size[2]
+            if _quarter_turns(frot + prot) % 2:
+                pw, ph = ph, pw
             pads.append(dict(number=str(int(p[1])) if isinstance(p[1], float) else sval(p[1]),
                              kind=p[2], shape=p[3],
-                             x=fx + pat[1], y=fy + pat[2], w=size[1], h=size[2],
+                             x=fx + px, y=fy + py, w=pw, h=ph,
                              drill=drill[1] if drill else None,
                              rratio=rr[1] if rr else 0.0,
                              net=int(net[1]), net_name=sval(net[2]),
                              ref=props.get("Reference", "?")))
         fps.append(dict(name=sval(f[1]), ref=props.get("Reference"), value=props.get("Value"),
-                        x=fx, y=fy, ref_at=[fx + ref_off[1], fy + ref_off[2]], rects=rects, pads=pads))
+                        x=fx, y=fy, ref_at=[fx + refx, fy + refy], rects=rects, pads=pads))
     segs = []
     for s in find_all(tree, "segment"):
         a = find_one(s, "start")
@@ -115,14 +136,23 @@ def load_board():
 
 
 def connectivity(board):
-    """Union pads joined by tracks; report missing joins per net."""
+    """Union pads joined by tracks; report missing joins per net.
+
+    Track ends that meet mid-board form junctions, so a pad reached by a
+    multi-segment chain counts the same as one joined by a single track.
+    """
     pads = [p for f in board["footprints"] for p in f["pads"]]
     report = []
+    tol = 0.01
     for nid, name in sorted(board["nets"].items()):
         if nid == 0:
             continue
         npads = [p for p in pads if p["net"] == nid]
-        parent = {i: i for i in range(len(npads))}
+        segs = [s for s in board["segments"] if s["net"] == nid]
+        pts = [(p["x"], p["y"]) for p in npads]
+        for s in segs:
+            pts += [(s["x1"], s["y1"]), (s["x2"], s["y2"])]
+        parent = list(range(len(pts)))
 
         def root(i):
             while parent[i] != i:
@@ -130,17 +160,18 @@ def connectivity(board):
                 i = parent[i]
             return i
 
-        for s in (s for s in board["segments"] if s["net"] == nid):
-            hit = []
-            for end in ((s["x1"], s["y1"]), (s["x2"], s["y2"])):
-                for i, p in enumerate(npads):
-                    if abs(p["x"] - end[0]) < 0.01 and abs(p["y"] - end[1]) < 0.01:
-                        hit.append(i)
-            if len(hit) == 2:
-                parent[root(hit[0])] = root(hit[1])
+        def union(a, b):
+            parent[root(a)] = root(b)
+
+        for k in range(len(segs)):
+            union(len(npads) + 2 * k, len(npads) + 2 * k + 1)
+        for i in range(len(pts)):
+            for j in range(i + 1, len(pts)):
+                if abs(pts[i][0] - pts[j][0]) < tol and abs(pts[i][1] - pts[j][1]) < tol:
+                    union(i, j)
         groups = len({root(i) for i in range(len(npads))})
         report.append(dict(net=name, pads=[f'{p["ref"]}.{p["number"]}' for p in npads],
-                           tracks=len([s for s in board["segments"] if s["net"] == nid]),
+                           tracks=len(segs),
                            missing=max(groups - 1, 0),
                            single_pad=len(npads) == 1))
     return report
@@ -194,17 +225,21 @@ class Gerber:
             self.draw(*p)
         self.body.append("G37*")
 
-    def roundrect(self, cx, cy, w, h, ratio):
-        r = ratio * min(w, h)
+    def roundrect(self, cx, cy, w, h, ratio, arc_steps=6):
+        r = min(ratio * min(w, h), w / 2, h / 2)
         if r < 1e-6:
             self.select(self.ap("R", w, h))
             self.flash(cx, cy)
             return
-        iw, ih = w - 2 * r, h - 2 * r
-        pts = [(cx - iw / 2, cy - ih / 2), (cx + iw / 2, cy - ih / 2),
-               (cx + iw / 2, cy + ih / 2), (cx - iw / 2, cy + ih / 2)]
+        pts = []
+        for ax, ay, a0 in ((cx + w / 2 - r, cy - h / 2 + r, -90.0),
+                           (cx + w / 2 - r, cy + h / 2 - r, 0.0),
+                           (cx - w / 2 + r, cy + h / 2 - r, 90.0),
+                           (cx - w / 2 + r, cy - h / 2 + r, 180.0)):
+            for i in range(arc_steps + 1):
+                a = math.radians(a0 + 90.0 * i / arc_steps)
+                pts.append((ax + r * math.cos(a), ay + r * math.sin(a)))
         self.region(pts)
-        self.path(pts, 2 * r)
 
     def render(self, note):
         head = [f"G04 {note}*",
@@ -212,12 +247,11 @@ class Gerber:
                 f"%TF.FilePolarity,{self.polarity}*%",
                 "%FSLAX46Y46*%", "G04 Gerber format 4.6, absolute, unit mm*", "%MOMM*%"]
         for key, code in self.apertures.items():
-            dims = ",".join(f"{d:.6f}" for d in key[1:])
-            sep = "X" if key[0] != "C" else ""
             if key[0] == "R":
                 dims = "X".join(f"{d:.6f}" for d in key[1:])
                 head.append(f"%ADD{code}R,{dims}*%")
             else:
+                dims = ",".join(f"{d:.6f}" for d in key[1:])
                 head.append(f"%ADD{code}C,{dims}*%")
         head += ["%LPD*%", "G01*", "G75*"]
         return "\n".join(head + self.body + ["M02*"]) + "\n"
@@ -241,11 +275,13 @@ def build_gerbers(board, out_dir):
         cx, cy = X(p["x"]), Y(p["y"])
         if p["kind"] == "smd" or p["shape"] == "rect":
             g.roundrect(cx, cy, p["w"], p["h"], p["rratio"])
+        elif p["shape"] == "oval" and abs(p["w"] - p["h"]) > 1e-9:
+            g.roundrect(cx, cy, p["w"], p["h"], 0.5)
         elif abs(p["w"] - p["h"]) < 1e-9:
             g.select(g.ap("C", p["w"]))
             g.flash(cx, cy)
         else:
-            raise ValueError("non-circular oval pads are not used in this board")
+            raise ValueError("unsupported pad shape %s %sx%s" % (p["shape"], p["w"], p["h"]))
 
     layers = {}
     g = Gerber("Copper,L1,Top")
@@ -296,10 +332,12 @@ def build_gerbers(board, out_dir):
         written.append(path)
 
     holes = [p for p in tht if p["drill"]]
+    drills = sorted({p["drill"] for p in holes})
     lines = ["M48", "; Generated by tools/build_assets.py", "; #@! TF.FileFunction,Plated,1,2,PTH",
-             "METRIC", "T1C%.3f" % holes[0]["drill"], "%", "T1"]
-    for p in holes:
-        lines.append(f"X{X(p['x']):.3f}Y{Y(p['y']):.3f}")
+             "METRIC"] + [f"T{i}C{d:.3f}" for i, d in enumerate(drills, 1)] + ["%"]
+    for i, d in enumerate(drills, 1):
+        lines.append(f"T{i}")
+        lines += [f"X{X(p['x']):.3f}Y{Y(p['y']):.3f}" for p in holes if p["drill"] == d]
     lines.append("M30")
     drl = out_dir / "attiny412-pulsenode-PTH.drl"
     drl.write_text("\n".join(lines) + "\n")

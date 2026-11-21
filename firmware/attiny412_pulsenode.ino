@@ -10,7 +10,7 @@ constexpr uint8_t PIN_BTN    = PIN_PA1;
 constexpr uint8_t PIN_STATUS = PIN_PA2;
 constexpr uint8_t PIN_PWM    = PIN_PA3;
 
-uint8_t mode = 0; // 0 = auto ambient dimming, 1 = 25-min study pulse, 2 = beacon
+uint8_t mode = 0; // 0 = auto ambient dimming, 1 = breathing pulse, 2 = beacon
 
 void setup() {
   pinMode(PIN_BUZZER, OUTPUT);
@@ -36,8 +36,8 @@ void loop() {
     analogWrite(PIN_PWM, pwm);
     digitalWrite(PIN_STATUS, LOW);
   } else if (mode == 1) {
-    uint32_t phase = (millis() / 12) % 510;
-    uint8_t breath = phase < 255 ? phase : (510 - phase);
+    uint32_t phase = (millis() / 12) % 512;
+    uint8_t breath = phase < 256 ? phase : (511 - phase);
     analogWrite(PIN_PWM, breath);
     digitalWrite(PIN_STATUS, HIGH);
   } else {

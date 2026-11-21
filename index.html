@@ -28,7 +28,6 @@
 <header class="titleblock">
   <div class="name">
     <h1>ATtiny412 PulseNode</h1>
-    <p>8-pin SOIC microcontroller board, KiCad 8 source, 3D assembly and Gerbers.</p>
   </div>
   <div class="cell"><span class="k">Board</span><span class="v" id="tb-size">loading</span></div>
   <div class="cell"><span class="k">Layers</span><span class="v">2 copper, FR-4</span></div>
@@ -174,7 +173,7 @@ try {
   $("#tb-route").textContent = unrouted ? `${unrouted} unrouted` : "fully routed";
   const bits = [];
   if (unrouted) bits.push(`${unrouted} connection${unrouted === 1 ? " is" : "s are"} still unrouted`);
-  if (lonely.length) bits.push(`${lonely.length} nets (${lonely.map((n) => n.pads[0]).join(", ")}) reach only one pad because no matching part is placed`);
+  if (lonely.length) bits.push(`${lonely.length} nets (${lonely.map((n) => n.net).join(", ")}) reach only one pad because no matching part is placed`);
   if (bomParts && bomParts !== placed) bits.push(`bom.csv lists ${bomParts} parts but the board carries ${placed}`);
   if (bits.length) {
     banner.textContent = `Work in progress, not ready to order. ${bits.join("; ")}. The Gerbers in the downloads match the board as it stands.`;
@@ -184,18 +183,24 @@ try {
   }
 
   // ---- 3D viewer
-  const viewer = await createViewer($("#gl"), {
-    meshes: [
-      { key: "board", url: "assets/board.stl", color: "--color-ok" },
-      { key: "parts", url: "assets/parts.stl", color: "--color-ink-2" },
-    ],
-    label: "ATtiny412 PulseNode board with part envelopes",
-  });
+  let viewer = null;
+  try {
+    viewer = await createViewer($("#gl"), {
+      meshes: [
+        { key: "board", url: "assets/board.stl", color: "--color-ok" },
+        { key: "parts", url: "assets/parts.stl", color: "--color-ink-2" },
+      ],
+      label: "ATtiny412 PulseNode board with part envelopes",
+    });
+  } catch (err) {
+    console.warn("3D viewer unavailable:", err);
+  }
   if (!viewer) {
     $("#fallback").classList.add("show");
     $("#views").hidden = true;
     $("#wire").hidden = true;
     $("#hint").hidden = true;
+    $("#sep1").hidden = true;
   } else {
     document.querySelectorAll("#views button").forEach((b) => b.addEventListener("click", () => viewer.frame(b.dataset.view)));
     $("#wire").addEventListener("click", (e) => {
@@ -281,7 +286,9 @@ try {
       h("td", {}, n.single_pad ? h("span", { class: "badge plain", text: "single pad" })
         : n.missing ? h("span", { class: "badge flag", text: "unrouted" }) : h("span", { class: "badge ok", text: "routed" })));
     const pick = () => {
-      const id = Number(idOf(n.net));
+      const raw = idOf(n.net);
+      if (raw === undefined) return;
+      const id = Number(raw);
       selectedNet = selectedNet === id ? null : id;
       rows.querySelectorAll("tr").forEach((r) => r.setAttribute("aria-selected", "false"));
       if (selectedNet !== null) tr.setAttribute("aria-selected", "true");
