@@ -15,6 +15,8 @@
 <link rel="modulepreload" href="assets/three-bundle.min.js">
 <link rel="modulepreload" href="assets/viewer.js">
 <link rel="modulepreload" href="assets/ui.js">
+<link rel="modulepreload" href="assets/node-lab.js">
+<link rel="modulepreload" href="assets/lab-ui.js">
 <style>
   :root { --accent: oklch(62% 0.14 50); --accent-ink: oklch(42% 0.12 50); --accent-wash: oklch(92% 0.05 60); }
   [hidden] { display: none !important; }
@@ -39,6 +41,7 @@
   <a href="#model">Viewer</a>
   <a href="#nets">Nets</a>
   <a href="#parts">Parts</a>
+  <a href="#lab">Lab</a>
   <a href="#files">Downloads</a>
   <a href="#notes">Notes</a>
   <span class="grow"></span>
@@ -117,6 +120,61 @@
           <thead><tr><th>Ref</th><th>Value</th><th>Footprint</th><th class="num">X mm</th><th class="num">Y mm</th></tr></thead>
           <tbody id="part-rows"></tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="wrap">
+      <div class="head"><h2>Board readiness lab</h2><p>Deterministic audit of pcb.json, bom.csv and the firmware modes. Click a net row to light it on the board; the hash stores the view.</p></div>
+      <div class="lab-grid">
+        <div class="lab-card">
+          <h3>Firmware mode</h3>
+          <div class="seg lab-seg" id="lab-modes" role="group" aria-label="Firmware mode">
+            <button type="button" data-mode="0" aria-pressed="true">Ambient auto-dim</button>
+            <button type="button" data-mode="1" aria-pressed="false">Breathing pulse</button>
+            <button type="button" data-mode="2" aria-pressed="false">Blinking beacon</button>
+          </div>
+          <p class="lab-note" id="lab-mode-note"></p>
+        </div>
+        <div class="lab-card">
+          <h3>Readiness proof</h3>
+          <p class="lab-digest-line">SHA-256 <code class="data" id="lab-digest">computing</code></p>
+          <div class="lab-actions">
+            <button type="button" class="btn" id="lab-verify">Verify digest</button>
+            <button type="button" class="btn" id="lab-tamper" aria-pressed="false">Tamper demo</button>
+            <button type="button" class="chip-btn" id="lab-dl-json">JSON</button>
+            <button type="button" class="chip-btn" id="lab-dl-csv">CSV</button>
+            <button type="button" class="chip-btn" id="lab-dl-md">Markdown</button>
+          </div>
+          <p class="lab-note" id="lab-proof-note">One canonical payload feeds the fingerprint, JSON, CSV and Markdown exports, so all four stamp the same digest.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="lab-net-table">
+          <thead><tr><th class="num">Pin</th><th>Net</th><th>Pads on board</th><th class="num">Tracks</th><th class="num">Open</th><th>Parts awaiting pads</th><th>Status</th></tr></thead>
+          <tbody id="lab-net-rows"></tbody>
+        </table>
+      </div>
+      <div class="lab-charts">
+        <figure class="lab-card lab-fig">
+          <figcaption><h3>Ambient ADC to PWM duty and node current</h3></figcaption>
+          <svg id="lab-chart-pwm" viewBox="0 0 660 300" role="img" aria-label="PWM duty and node current across the ADC sweep"></svg>
+          <p class="lab-note data" id="lab-pwm-readout"></p>
+        </figure>
+        <figure class="lab-card lab-fig">
+          <figcaption><h3>BOM cost placed vs remaining</h3></figcaption>
+          <svg id="lab-chart-bom" viewBox="0 0 660 240" role="img" aria-label="BOM cost split between placed and remaining parts"></svg>
+          <p class="lab-note data" id="lab-bom-readout"></p>
+        </figure>
+      </div>
+      <div class="lab-card">
+        <div class="lab-tests-head">
+          <h3>In-page self-tests</h3>
+          <button type="button" class="btn primary" id="lab-run-tests">Run self-tests</button>
+          <span class="badge plain" id="lab-test-count">not run</span>
+        </div>
+        <ol class="lab-tests" id="lab-tests"></ol>
       </div>
     </div>
   </section>
@@ -278,6 +336,7 @@ try {
   // ---- nets table
   const rows = $("#net-rows");
   const idOf = (name) => Object.entries(pcb.nets).find(([, v]) => v === name)?.[0];
+  let labSync = null;
   rows.replaceChildren(...pcb.connectivity.map((n) => {
     const tr = h("tr", { tabindex: 0, "aria-selected": "false" },
       h("td", { class: "data", text: n.net }),
@@ -295,6 +354,7 @@ try {
       if (selectedNet !== null) tr.setAttribute("aria-selected", "true");
       drawBoard();
       selectMode("d2");
+      labSync?.(selectedNet === null ? null : n.net);
       $("#model").scrollIntoView({ block: "nearest" });
     };
     tr.addEventListener("click", pick);
@@ -309,6 +369,27 @@ try {
     h("td", { class: "data", text: f.name }),
     h("td", { class: "num", text: num(f.x - o.x, 2) }),
     h("td", { class: "num", text: num(f.y - o.y, 2) }))));
+
+  // ---- board readiness lab (graceful: page still works without it)
+  try {
+    const { initLab } = await import("./assets/lab-ui.js");
+    const lab = initLab({
+      pcb, bomText,
+      onSelectNet: (name, on) => {
+        const raw = idOf(name);
+        if (raw === undefined) return;
+        selectedNet = on ? Number(raw) : null;
+        rows.querySelectorAll("tr").forEach((r, i) =>
+          r.setAttribute("aria-selected", String(on && pcb.connectivity[i] && pcb.connectivity[i].net === name)));
+        drawBoard();
+        selectMode("d2");
+        $("#model").scrollIntoView({ block: "nearest" });
+      },
+    });
+    labSync = lab.syncNet;
+  } catch (err) {
+    console.warn("readiness lab unavailable:", err);
+  }
 
 } catch (err) {
   banner.textContent = "Could not load the board data. Serve this folder over HTTP and reload.";
