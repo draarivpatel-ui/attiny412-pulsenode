@@ -28,7 +28,7 @@
   --color-flag: oklch(44% 0.14 55);
   --color-flag-bg: oklch(93% 0.06 80);
   --color-focus: oklch(50% 0.17 255);
-  --accent: oklch(62% 0.14 50);
+  --accent: oklch(63% 0.14 50);
   --accent-ink: oklch(42% 0.12 50);
   --accent-wash: oklch(92% 0.05 60);
 
@@ -51,6 +51,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; font-style: nor
 p { margin: 0; max-width: var(--measure); }
 a { color: var(--accent-ink); text-underline-offset: 3px; }
 a:hover { color: var(--color-ink); }
+.skip:hover, .skip-link:hover { color: var(--color-paper); }
 code, .data { font-family: var(--font-data); font-size: 0.92em; font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .skip, .skip-link { position: absolute; left: var(--space-3); top: -60px; background: var(--color-ink); color: var(--color-paper); padding: var(--space-2) var(--space-3); z-index: 20; }
