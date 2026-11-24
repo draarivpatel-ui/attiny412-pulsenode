@@ -281,6 +281,8 @@ const BREATH_PERIOD = 512;
 
 /** Arduino map() with C++ integer semantics (truncation toward zero). */
 export function arduinoMap(x, inMin, inMax, outMin, outMax) {
+  if (![x, inMin, inMax, outMin, outMax].every(Number.isFinite)) throw new TypeError("arduinoMap: finite numeric inputs required");
+  if (inMax === inMin) throw new RangeError("arduinoMap: input span must be nonzero");
   return Math.trunc(((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
 }
 
@@ -292,6 +294,8 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
  * and ignore the ADC, exactly like the sketch.
  */
 export function pwmAt(mode, adc, tMs = 0) {
+  if (!Number.isFinite(adc)) throw new TypeError("pwmAt: adc must be finite");
+  if (!Number.isFinite(tMs) || tMs < 0) throw new TypeError("pwmAt: time must be finite and nonnegative");
   const a = Math.round(adc);
   const t = Math.floor(tMs);
   if (mode === 0) return arduinoMap(clamp(a, LDR_LO, LDR_HI), LDR_LO, LDR_HI, PWM_FULL, PWM_DIM);
@@ -323,12 +327,14 @@ export function modeStats(mode, adc) {
 
 /** LED forward current in mA at a given duty fraction (0..1) through R_OHM. */
 export function ledCurrentMa(duty01) {
+  if (!Number.isFinite(duty01)) throw new TypeError("ledCurrentMa: duty must be finite");
   const d = clamp(duty01, 0, 1);
   return ((ELEC.VCC_V - ELEC.LED_VF_V) / ELEC.R_OHM) * d * 1000;
 }
 
 /** Status LED draw in mA for the mode: solid on in breathing, blinking in beacon. */
 export function statusCurrentMa(mode) {
+  if (!Number.isInteger(mode) || mode < 0 || mode > 2) throw new RangeError(`statusCurrentMa: unknown mode ${mode}`);
   const on = ((ELEC.VCC_V - ELEC.STATUS_VF_V) / ELEC.R_OHM) * 1000;
   if (mode === 1) return on;
   if (mode === 2) return on / 2;
@@ -337,6 +343,7 @@ export function statusCurrentMa(mode) {
 
 /** Total node current estimate in mA at a mean duty fraction. */
 export function nodeCurrentMa(mode, meanDuty01) {
+  if (!Number.isInteger(mode) || mode < 0 || mode > 2) throw new RangeError(`nodeCurrentMa: unknown mode ${mode}`);
   return ELEC.MCU_MA + ELEC.PIEZO_MA + ledCurrentMa(meanDuty01) + statusCurrentMa(mode);
 }
 
@@ -345,7 +352,7 @@ export function nodeCurrentMa(mode, meanDuty01) {
  * Returns [{adc, pwmMean, pwmMin, pwmMax, dutyPct, ledMa, nodeMa}].
  */
 export function sweepMode(mode, count = 13) {
-  if (!Number.isSafeInteger(count) || count < 2) throw new RangeError("sweepMode: count must be an integer >= 2");
+  if (!Number.isSafeInteger(count) || count < 2 || count > 1025) throw new RangeError("sweepMode: count must be an integer from 2 to 1025");
   const pts = [];
   for (let i = 0; i < count; i++) {
     const adc = Math.round((ADC_MAX * i) / (count - 1));
@@ -744,6 +751,7 @@ export async function runSelfTests({ pcb, bomText, refSha256 = null, samples = 1
  * neighbor center distance so hit targets never overlap.
  */
 export function markerHitRadius(centers, requested) {
+  if (!Number.isFinite(requested)) throw new TypeError("markerHitRadius: requested radius must be finite");
   if (!Array.isArray(centers) || centers.length < 2 || !centers.every((c) => Number.isFinite(c))) {
     return Math.max(0, requested);
   }
