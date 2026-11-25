@@ -6,7 +6,7 @@ A compact 2-layer node built around the 8-pin ATtiny412-SSNR (SOIC-8) microcontr
 
 **Live inspector:** `index.html` (served by GitHub Pages at `https://aariv.me/attiny412-pulsenode/`) shows the board in 3D and 2D, the net routing status, and every download. It is generated from the KiCad file, so its numbers always match the board.
 
-**Board readiness lab:** the same page carries a deterministic audit section (`assets/node-lab.js`, identical results in the browser and under `node --test`): an 8-net / SOIC-8 pin readiness comparator over the real `pcb.json` nets, a PWM duty and node-current curve that models all three firmware modes across the `0..1023` ADC sweep, a BOM cost split (`$1.76` total across 12 parts on 11 line items: `$0.68` placed, `$1.08` remaining), a single cached SHA-256 readiness proof shared by the on-page fingerprint and the JSON/CSV/Markdown exports (CSV is formula-injection safe), a fail-closed `#pnlab=` state hash, and an in-page self-test runner. `npm test` runs 402 checks.
+**Board readiness lab:** the same page carries a deterministic audit section (`assets/node-lab.js`, identical results in the browser and under `node --test`): an 8-net / SOIC-8 pin readiness comparator over the real `pcb.json` nets, a PWM duty and node-current curve that models all three firmware modes across the `0..1023` ADC sweep, a BOM cost split (`$1.76` total across 12 parts on 11 line items: `$0.68` placed, `$1.08` remaining), a single cached SHA-256 readiness proof shared by the on-page fingerprint and the JSON/CSV/Markdown exports (CSV is formula-injection safe), a fail-closed `#pnlab=` state hash, and an in-page self-test runner. `npm test` runs 409 checks.
 
 ## Current state
 
