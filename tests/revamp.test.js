@@ -146,11 +146,11 @@ test('pcb.json matches the board facts the README claims', () => {
   assert.deepEqual(pcb.outline && { w: pcb.outline.w, h: pcb.outline.h }, { w: 36, h: 26 });
   assert.deepEqual(pcb.cad.size, [36, 26, 1.6]);
   assert.equal(pcb.cad.valid, true);
-  assert.equal(pcb.footprints.length, 4);
+  assert.equal(pcb.footprints.length, 12);
   const unrouted = pcb.connectivity.reduce((s, n) => s + n.missing, 0);
-  assert.equal(unrouted, 3, 'expected 3 unrouted connections');
+  assert.equal(unrouted, 0, 'expected 0 unrouted connections');
   const lonely = pcb.connectivity.filter((n) => n.single_pad);
-  assert.equal(lonely.length, 4, 'expected 4 single-pad nets');
+  assert.equal(lonely.length, 0, 'expected no single-pad nets');
   const netIds = new Set(Object.keys(pcb.nets));
   for (const n of pcb.connectivity) assert.ok([...netIds].some((id) => pcb.nets[id] === n.net), `net ${n.net} missing from nets map`);
   for (const f of pcb.footprints) for (const p of f.pads) assert.ok(netIds.has(String(p.net)), `pad ${f.ref}.${p.number} references unknown net ${p.net}`);
@@ -160,7 +160,7 @@ test('bom.csv parses cleanly, has no formula-injection cells, and quantities sum
   const rows = fs.readFileSync(path.join(root, 'bom.csv'), 'utf8').trim().split(/\r?\n/);
   assert.equal(rows[0], 'Reference,Value,Footprint,Quantity,MPN,Supplier,Unit_Cost_USD');
   const data = rows.slice(1);
-  assert.equal(data.length, 11);
+  assert.equal(data.length, 12);
   let qty = 0;
   const refs = new Set();
   for (const r of data) {
@@ -251,8 +251,8 @@ assert abs(ref[0] - 52) < 1e-6 and abs(ref[1] - 50) < 1e-6, ref        # (0,-2) 
 # shipped pcb.json still equals a fresh parse plus connectivity (no regen drift)
 live = ba.load_board(); live["connectivity"] = ba.connectivity(live)
 old = json.load(open(sys.argv[1] + "/assets/pcb.json"))
-for k in ("nets", "outline", "texts", "footprints", "segments", "connectivity"):
-    assert json.dumps(live[k], sort_keys=True) == json.dumps(old[k], sort_keys=True), k
+for k in ("nets", "outline", "texts", "footprints", "vias", "segments", "connectivity"):
+    assert json.loads(json.dumps(live[k])) == old[k], k
 print(json.dumps({"ok": True}))
 `;
 
@@ -262,5 +262,5 @@ test('build_assets.py parser, connectivity, gerber and drill writers behave', ()
 });
 
 test('python tools stay syntactically valid', () => {
-  assert.doesNotThrow(() => execFileSync('python3', ['-m', 'py_compile', path.join(root, 'tools/build_assets.py')]));
+  assert.doesNotThrow(() => execFileSync('python3', ['-m', 'py_compile', path.join(root, 'tools/build_assets.py'), path.join(root, 'tools/generate_pcb.py'), path.join(root, 'tools/audit_pcb.py')]));
 });

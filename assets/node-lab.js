@@ -130,17 +130,20 @@ export function canonicalize(value, maxDepth = 32) {
 // Board analysis: the real pcb.json nets, placed footprints, tracks, ratsnest.
 // ---------------------------------------------------------------------------
 
-// Design intent from the schematic: which BOM refs still need landing on each net.
-// Each unplaced BOM ref is charged to exactly one net (R2 appears once per unit).
+// The completed rev 1.1 board has every BOM reference placed. The empty sets
+// remain explicit so the comparator proves that no net is still awaiting a part.
 export const NET_EXPECTED = {
   "+5V": [],
   "GND": [],
-  "PA6_PIEZO": ["BZ1"],
-  "PA7_LDR": ["Q1", "R1"],
-  "PA1_BTN": ["SW1"],
-  "PA2_STATUS": ["D2", "R2"],
-  "PA0_UPDI": ["R3"],
-  "PA3_PWM": ["R2"],
+  "PA6_PIEZO": [],
+  "PA7_LDR": [],
+  "PA1_BTN": [],
+  "PA2_STATUS": [],
+  "PA0_UPDI": [],
+  "PA3_PWM": [],
+  "PWM_LED": [],
+  "STATUS_LED": [],
+  "UPDI_HDR": [],
 };
 
 export function analyzeBoard(pcb) {
@@ -202,9 +205,8 @@ export function analyzeBoard(pcb) {
 // ---------------------------------------------------------------------------
 
 /**
- * Parse bom.csv. The Unit_Cost_USD column is the per-line cost as listed by the
- * suppliers (the R2 row already covers both 0805 resistors at a cent each), so
- * the column is summed directly and also multiplied by quantity for comparison.
+ * Parse bom.csv. Unit_Cost_USD is a true unit cost; each row contributes
+ * quantity times unit cost to the build total.
  */
 export function parseBom(csvText, placedRefs = []) {
   if (typeof csvText !== "string") throw new TypeError("parseBom: csv text required");
@@ -214,8 +216,8 @@ export function parseBom(csvText, placedRefs = []) {
   const rows = lines.slice(1).map((line, i) => {
     const c = line.split(",");
     const qty = Number.parseInt(c[3], 10);
-    const unitCost = Math.round(Number.parseFloat(c[6]) * 100) / 100;
-    if (!Number.isFinite(qty) || !Number.isFinite(unitCost)) {
+    const unitCents = Math.round(Number.parseFloat(c[6]) * 100);
+    if (!Number.isFinite(qty) || !Number.isFinite(unitCents)) {
       throw new TypeError(`parseBom: malformed numeric field on line ${i + 2}`);
     }
     return {
@@ -225,7 +227,8 @@ export function parseBom(csvText, placedRefs = []) {
       qty,
       mpn: c[4],
       supplier: c[5],
-      lineCost: unitCost,
+      unitCost: unitCents / 100,
+      lineCost: (unitCents * qty) / 100,
       placed: placed.has(c[0]),
     };
   });
@@ -379,7 +382,7 @@ export function sweepMode(mode, count = 13) {
 export const STATE_DEFAULTS = Object.freeze({ mode: 0, net: -1, sample: -1, tamper: 0 });
 const CODEC_SPEC = Object.freeze({
   m: { min: 0, max: 2 },
-  n: { min: -1, max: 8 },
+  n: { min: -1, max: 11 },
   s: { min: -1, max: 63 },
   t: { min: 0, max: 1 },
 });
@@ -659,23 +662,23 @@ export async function runSelfTests({ pcb, bomText, refSha256 = null, samples = 1
   });
   await check("board outline is 36 x 26 mm", () =>
     want(board.outline.w === 36 && board.outline.h === 26, `${board.outline.w} x ${board.outline.h}`));
-  await check("exactly 4 placed footprints U1 C1 D1 J1", () =>
-    want(eq(board.placedRefs, ["U1", "C1", "D1", "J1"]), board.placedRefs.join(",")));
-  await check("exactly 8 named nets present", () =>
-    want(board.namedNetCount === 8, String(board.namedNetCount)));
+  await check("exactly 12 placed footprints covering the BOM", () =>
+    want(eq(board.placedRefs, ["U1", "C1", "R1", "R2", "R3", "R4", "D1", "D2", "Q1", "SW1", "BZ1", "J1"]), board.placedRefs.join(",")));
+  await check("exactly 11 named nets present", () =>
+    want(board.namedNetCount === 11, String(board.namedNetCount)));
   await check("net names match the schematic set", () =>
-    want(eq(board.nets.map((n) => n.name), ["+5V", "GND", "PA6_PIEZO", "PA7_LDR", "PA1_BTN", "PA2_STATUS", "PA0_UPDI", "PA3_PWM"]),
+    want(eq(board.nets.map((n) => n.name), ["+5V", "GND", "PA6_PIEZO", "PA7_LDR", "PA1_BTN", "PA2_STATUS", "PA0_UPDI", "PA3_PWM", "PWM_LED", "STATUS_LED", "UPDI_HDR"]),
       board.nets.map((n) => n.name).join(",")));
-  await check("placed pad count is 15", () => want(board.padTotal === 15, String(board.padTotal)));
-  await check("track segment count is 4", () => want(board.trackTotal === 4, String(board.trackTotal)));
-  await check("open connection count is 3", () => want(board.missingTotal === 3, String(board.missingTotal)));
-  await check("single-pad nets are the 4 unplaced MCU pins", () =>
-    want(eq(board.lonelyNets, ["PA6_PIEZO", "PA7_LDR", "PA1_BTN", "PA2_STATUS"]), board.lonelyNets.join(",")));
-  await check("BOM parses 11 line items and 12 parts", () =>
-    want(bom.lineCount === 11 && bom.partCount === 12, `${bom.lineCount}/${bom.partCount}`));
-  await check("BOM sum matches raw column sum", () => {
+  await check("placed pad count is 33", () => want(board.padTotal === 33, String(board.padTotal)));
+  await check("track segment count is 45", () => want(board.trackTotal === 45, String(board.trackTotal)));
+  await check("open connection count is 0", () => want(board.missingTotal === 0, String(board.missingTotal)));
+  await check("no single-pad nets remain", () =>
+    want(eq(board.lonelyNets, []), board.lonelyNets.join(",")));
+  await check("BOM parses 12 line items and 12 parts", () =>
+    want(bom.lineCount === 12 && bom.partCount === 12, `${bom.lineCount}/${bom.partCount}`));
+  await check("BOM sum matches quantity times unit cost", () => {
     const raw = bomText.trim().split(/\r?\n/).slice(1)
-      .reduce((s, l) => s + Math.round(parseFloat(l.split(",")[6]) * 100), 0);
+      .reduce((s, l) => s + (parseInt(l.split(",")[3], 10) || 0) * Math.round(parseFloat(l.split(",")[6]) * 100), 0);
     return want(Math.round(bom.totalCost * 100) === raw, `$${bom.totalCost.toFixed(2)}`);
   });
   await check("placed cost plus remaining cost equals total", () =>

@@ -8,7 +8,10 @@
   "5": "PA1_BTN",
   "6": "PA2_STATUS",
   "7": "PA0_UPDI",
-  "8": "PA3_PWM"
+  "8": "PA3_PWM",
+  "9": "PWM_LED",
+  "10": "STATUS_LED",
+  "11": "UPDI_HDR"
  },
  "outline": {
   "x": 100.0,
@@ -19,18 +22,11 @@
  },
  "texts": [
   {
-   "text": "ATtiny412 PulseNode v1.0",
+   "text": "PulseNode v1.1",
    "x": 118.0,
-   "y": 87.2,
+   "y": 86.8,
    "layer": "F.SilkS",
    "size": 1.2
-  },
-  {
-   "text": "8-Pin SOIC Ambient & PWM Node",
-   "x": 118.0,
-   "y": 109.2,
-   "layer": "F.SilkS",
-   "size": 1.0
   }
  ],
  "footprints": [
@@ -54,6 +50,7 @@
      "width": 0.12
     }
    ],
+   "circles": [],
    "pads": [
     {
      "number": "1",
@@ -172,21 +169,31 @@
   {
    "name": "Capacitor_SMD:C_0805_2012Metric",
    "ref": "C1",
-   "value": "100nF",
-   "x": 110.0,
-   "y": 92.0,
+   "value": "100nF 50V X7R",
+   "x": 118.0,
+   "y": 92.7,
    "ref_at": [
-    110.0,
-    90.2
+    118.0,
+    90.9
    ],
-   "rects": [],
+   "rects": [
+    {
+     "x1": 116.8,
+     "y1": 91.85000000000001,
+     "x2": 119.2,
+     "y2": 93.55,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
    "pads": [
     {
      "number": "1",
      "kind": "smd",
      "shape": "roundrect",
-     "x": 109.0,
-     "y": 92.0,
+     "x": 117.0,
+     "y": 92.7,
      "w": 1.0,
      "h": 1.3,
      "drill": null,
@@ -199,8 +206,8 @@
      "number": "2",
      "kind": "smd",
      "shape": "roundrect",
-     "x": 111.0,
-     "y": 92.0,
+     "x": 119.0,
+     "y": 92.7,
      "w": 1.0,
      "h": 1.3,
      "drill": null,
@@ -212,37 +219,255 @@
    ]
   },
   {
-   "name": "LED_SMD:LED_0805_2012Metric",
-   "ref": "D1",
-   "value": "PWM_AMBER",
-   "x": 128.0,
-   "y": 92.0,
+   "name": "Resistor_SMD:R_0805_2012Metric",
+   "ref": "R1",
+   "value": "10k Ohm 1%",
+   "x": 108.5,
+   "y": 92.2,
    "ref_at": [
-    128.0,
-    90.2
+    108.5,
+    90.4
    ],
-   "rects": [],
+   "rects": [
+    {
+     "x1": 107.3,
+     "y1": 91.35000000000001,
+     "x2": 109.7,
+     "y2": 93.05,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
    "pads": [
     {
      "number": "1",
      "kind": "smd",
      "shape": "roundrect",
-     "x": 127.0,
-     "y": 92.0,
+     "x": 107.5,
+     "y": 92.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 4,
+     "net_name": "PA7_LDR",
+     "ref": "R1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 109.5,
+     "y": 92.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "R1"
+    }
+   ]
+  },
+  {
+   "name": "Resistor_SMD:R_0805_2012Metric",
+   "ref": "R2",
+   "value": "330 Ohm 1%",
+   "x": 125.0,
+   "y": 90.5,
+   "ref_at": [
+    125.0,
+    88.7
+   ],
+   "rects": [
+    {
+     "x1": 123.8,
+     "y1": 89.65,
+     "x2": 126.2,
+     "y2": 91.35,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 124.0,
+     "y": 90.5,
      "w": 1.0,
      "h": 1.3,
      "drill": null,
      "rratio": 0.25,
      "net": 8,
      "net_name": "PA3_PWM",
+     "ref": "R2"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 126.0,
+     "y": 90.5,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 9,
+     "net_name": "PWM_LED",
+     "ref": "R2"
+    }
+   ]
+  },
+  {
+   "name": "Resistor_SMD:R_0805_2012Metric",
+   "ref": "R3",
+   "value": "4.7k Ohm UPDI",
+   "x": 126.0,
+   "y": 99.0,
+   "ref_at": [
+    126.0,
+    97.2
+   ],
+   "rects": [
+    {
+     "x1": 124.8,
+     "y1": 98.15,
+     "x2": 127.2,
+     "y2": 99.85,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 125.0,
+     "y": 99.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 7,
+     "net_name": "PA0_UPDI",
+     "ref": "R3"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 127.0,
+     "y": 99.0,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 11,
+     "net_name": "UPDI_HDR",
+     "ref": "R3"
+    }
+   ]
+  },
+  {
+   "name": "Resistor_SMD:R_0805_2012Metric",
+   "ref": "R4",
+   "value": "330 Ohm 1%",
+   "x": 126.0,
+   "y": 107.2,
+   "ref_at": [
+    126.0,
+    105.4
+   ],
+   "rects": [
+    {
+     "x1": 124.8,
+     "y1": 106.35000000000001,
+     "x2": 127.2,
+     "y2": 108.05,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 125.0,
+     "y": 107.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 6,
+     "net_name": "PA2_STATUS",
+     "ref": "R4"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 127.0,
+     "y": 107.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 10,
+     "net_name": "STATUS_LED",
+     "ref": "R4"
+    }
+   ]
+  },
+  {
+   "name": "LED_SMD:LED_0805_2012Metric",
+   "ref": "D1",
+   "value": "Amber PWM LED",
+   "x": 129.3,
+   "y": 90.5,
+   "ref_at": [
+    129.3,
+    88.7
+   ],
+   "rects": [
+    {
+     "x1": 128.10000000000002,
+     "y1": 89.65,
+     "x2": 130.5,
+     "y2": 91.35,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 128.3,
+     "y": 90.5,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 9,
+     "net_name": "PWM_LED",
      "ref": "D1"
     },
     {
      "number": "2",
      "kind": "smd",
      "shape": "roundrect",
-     "x": 129.0,
-     "y": 92.0,
+     "x": 130.3,
+     "y": 90.5,
      "w": 1.0,
      "h": 1.3,
      "drill": null,
@@ -254,23 +479,268 @@
    ]
   },
   {
-   "name": "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
-   "ref": "J1",
-   "value": "UPDI_HDR",
-   "x": 131.0,
-   "y": 101.0,
+   "name": "LED_SMD:LED_0805_2012Metric",
+   "ref": "D2",
+   "value": "Emerald Status LED",
+   "x": 130.2,
+   "y": 107.2,
    "ref_at": [
-    131.0,
-    98.5
+    130.2,
+    105.4
+   ],
+   "rects": [
+    {
+     "x1": 129.0,
+     "y1": 106.35000000000001,
+     "x2": 131.39999999999998,
+     "y2": 108.05,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 129.2,
+     "y": 107.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 10,
+     "net_name": "STATUS_LED",
+     "ref": "D2"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 131.2,
+     "y": 107.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "D2"
+    }
+   ]
+  },
+  {
+   "name": "LED_SMD:LED_0805_2012Metric",
+   "ref": "Q1",
+   "value": "ALS-PT19 Phototransistor",
+   "x": 104.9,
+   "y": 90.2,
+   "ref_at": [
+    104.9,
+    88.4
+   ],
+   "rects": [
+    {
+     "x1": 103.7,
+     "y1": 89.35000000000001,
+     "x2": 106.10000000000001,
+     "y2": 91.05,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 103.9,
+     "y": 90.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 1,
+     "net_name": "+5V",
+     "ref": "Q1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 105.9,
+     "y": 90.2,
+     "w": 1.0,
+     "h": 1.3,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 4,
+     "net_name": "PA7_LDR",
+     "ref": "Q1"
+    }
+   ]
+  },
+  {
+   "name": "Button_Switch_SMD:SW_SPST_PTS645",
+   "ref": "SW1",
+   "value": "PTS645 Tactile Switch",
+   "x": 118.0,
+   "y": 107.3,
+   "ref_at": [
+    118.0,
+    103.1
+   ],
+   "rects": [
+    {
+     "x1": 115.0,
+     "y1": 104.3,
+     "x2": 121.0,
+     "y2": 110.3,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 114.75,
+     "y": 105.05,
+     "w": 1.3,
+     "h": 1.5,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 5,
+     "net_name": "PA1_BTN",
+     "ref": "SW1"
+    },
+    {
+     "number": "2",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 114.75,
+     "y": 109.55,
+     "w": 1.3,
+     "h": 1.5,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 5,
+     "net_name": "PA1_BTN",
+     "ref": "SW1"
+    },
+    {
+     "number": "3",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 121.25,
+     "y": 105.05,
+     "w": 1.3,
+     "h": 1.5,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "SW1"
+    },
+    {
+     "number": "4",
+     "kind": "smd",
+     "shape": "roundrect",
+     "x": 121.25,
+     "y": 109.55,
+     "w": 1.3,
+     "h": 1.5,
+     "drill": null,
+     "rratio": 0.25,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "SW1"
+    }
+   ]
+  },
+  {
+   "name": "Buzzer_Beeper:MagneticBuzzer_12x12mm",
+   "ref": "BZ1",
+   "value": "Piezo Transducer 12mm",
+   "x": 106.7,
+   "y": 104.0,
+   "ref_at": [
+    106.7,
+    97.2
    ],
    "rects": [],
+   "circles": [
+    {
+     "x": 106.7,
+     "y": 104.0,
+     "r": 6.1,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "pads": [
+    {
+     "number": "1",
+     "kind": "thru_hole",
+     "shape": "circle",
+     "x": 109.2,
+     "y": 104.0,
+     "w": 1.8,
+     "h": 1.8,
+     "drill": 0.8,
+     "rratio": 0.0,
+     "net": 3,
+     "net_name": "PA6_PIEZO",
+     "ref": "BZ1"
+    },
+    {
+     "number": "2",
+     "kind": "thru_hole",
+     "shape": "circle",
+     "x": 104.2,
+     "y": 104.0,
+     "w": 1.8,
+     "h": 1.8,
+     "drill": 0.8,
+     "rratio": 0.0,
+     "net": 2,
+     "net_name": "GND",
+     "ref": "BZ1"
+    }
+   ]
+  },
+  {
+   "name": "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
+   "ref": "J1",
+   "value": "UPDI Power Header",
+   "x": 133.3,
+   "y": 98.6,
+   "ref_at": [
+    133.3,
+    95.89999999999999
+   ],
+   "rects": [
+    {
+     "x1": 132.03,
+     "y1": 97.33,
+     "x2": 134.57000000000002,
+     "y2": 104.94999999999999,
+     "layer": "F.SilkS",
+     "width": 0.12
+    }
+   ],
+   "circles": [],
    "pads": [
     {
      "number": "1",
      "kind": "thru_hole",
      "shape": "rect",
-     "x": 131.0,
-     "y": 101.0,
+     "x": 133.3,
+     "y": 98.6,
      "w": 1.7,
      "h": 1.7,
      "drill": 1.0,
@@ -283,22 +753,22 @@
      "number": "2",
      "kind": "thru_hole",
      "shape": "oval",
-     "x": 131.0,
-     "y": 103.54,
+     "x": 133.3,
+     "y": 101.14,
      "w": 1.7,
      "h": 1.7,
      "drill": 1.0,
      "rratio": 0.0,
-     "net": 7,
-     "net_name": "PA0_UPDI",
+     "net": 11,
+     "net_name": "UPDI_HDR",
      "ref": "J1"
     },
     {
      "number": "3",
      "kind": "thru_hole",
      "shape": "oval",
-     "x": 131.0,
-     "y": 106.08,
+     "x": 133.3,
+     "y": 103.67999999999999,
      "w": 1.7,
      "h": 1.7,
      "drill": 1.0,
@@ -310,42 +780,509 @@
    ]
   }
  ],
+ "vias": [
+  {
+   "x": 115.2,
+   "y": 92.7,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 1,
+   "net_name": "+5V"
+  },
+  {
+   "x": 102.8,
+   "y": 90.2,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 1,
+   "net_name": "+5V"
+  },
+  {
+   "x": 121.0,
+   "y": 92.7,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 2,
+   "net_name": "GND"
+  },
+  {
+   "x": 110.6,
+   "y": 93.5,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 2,
+   "net_name": "GND"
+  },
+  {
+   "x": 131.4,
+   "y": 91.8,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 2,
+   "net_name": "GND"
+  },
+  {
+   "x": 132.2,
+   "y": 108.5,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 2,
+   "net_name": "GND"
+  },
+  {
+   "x": 123.5,
+   "y": 109.55,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 2,
+   "net_name": "GND"
+  },
+  {
+   "x": 113.7,
+   "y": 97.365,
+   "size": 0.8,
+   "drill": 0.4,
+   "layers": [
+    "F.Cu",
+    "B.Cu"
+   ],
+   "net": 3,
+   "net_name": "PA6_PIEZO"
+  }
+ ],
  "segments": [
   {
    "x1": 115.3,
    "y1": 96.095,
-   "x2": 109.0,
-   "y2": 92.0,
-   "width": 0.35,
+   "x2": 117.0,
+   "y2": 92.7,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 1
+  },
+  {
+   "x1": 117.0,
+   "y1": 92.7,
+   "x2": 115.2,
+   "y2": 92.7,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 1
+  },
+  {
+   "x1": 103.9,
+   "y1": 90.2,
+   "x2": 102.8,
+   "y2": 90.2,
+   "width": 0.3,
    "layer": "F.Cu",
    "net": 1
   },
   {
    "x1": 120.7,
    "y1": 96.095,
-   "x2": 129.0,
-   "y2": 92.0,
-   "width": 0.35,
+   "x2": 119.0,
+   "y2": 92.7,
+   "width": 0.3,
    "layer": "F.Cu",
    "net": 2
   },
   {
+   "x1": 119.0,
+   "y1": 92.7,
+   "x2": 121.0,
+   "y2": 92.7,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 109.5,
+   "y1": 92.2,
+   "x2": 110.6,
+   "y2": 93.5,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 130.3,
+   "y1": 90.5,
+   "x2": 131.4,
+   "y2": 91.8,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 131.2,
+   "y1": 107.2,
+   "x2": 132.2,
+   "y2": 108.5,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 121.25,
+   "y1": 105.05,
+   "x2": 121.25,
+   "y2": 109.55,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 121.25,
+   "y1": 109.55,
+   "x2": 123.5,
+   "y2": 109.55,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 2
+  },
+  {
+   "x1": 115.3,
+   "y1": 97.365,
+   "x2": 113.7,
+   "y2": 97.365,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 3
+  },
+  {
+   "x1": 113.7,
+   "y1": 97.365,
+   "x2": 109.2,
+   "y2": 104.0,
+   "width": 0.3,
+   "layer": "B.Cu",
+   "net": 3
+  },
+  {
+   "x1": 115.3,
+   "y1": 98.635,
+   "x2": 112.5,
+   "y2": 98.635,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 4
+  },
+  {
+   "x1": 112.5,
+   "y1": 98.635,
+   "x2": 107.5,
+   "y2": 92.2,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 4
+  },
+  {
+   "x1": 107.5,
+   "y1": 92.2,
+   "x2": 105.9,
+   "y2": 90.2,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 4
+  },
+  {
+   "x1": 115.3,
+   "y1": 99.905,
+   "x2": 114.75,
+   "y2": 105.05,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 5
+  },
+  {
+   "x1": 114.75,
+   "y1": 105.05,
+   "x2": 114.75,
+   "y2": 109.55,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 5
+  },
+  {
+   "x1": 120.7,
+   "y1": 99.905,
+   "x2": 125.0,
+   "y2": 107.2,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 6
+  },
+  {
+   "x1": 127.0,
+   "y1": 107.2,
+   "x2": 129.2,
+   "y2": 107.2,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 10
+  },
+  {
+   "x1": 120.7,
+   "y1": 98.635,
+   "x2": 125.0,
+   "y2": 99.0,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 7
+  },
+  {
+   "x1": 127.0,
+   "y1": 99.0,
+   "x2": 133.3,
+   "y2": 101.14,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 11
+  },
+  {
    "x1": 120.7,
    "y1": 97.365,
-   "x2": 127.0,
-   "y2": 92.0,
+   "x2": 122.2,
+   "y2": 97.365,
    "width": 0.3,
    "layer": "F.Cu",
    "net": 8
   },
   {
-   "x1": 120.7,
-   "y1": 98.635,
-   "x2": 131.0,
-   "y2": 103.54,
+   "x1": 122.2,
+   "y1": 97.365,
+   "x2": 124.0,
+   "y2": 90.5,
    "width": 0.3,
    "layer": "F.Cu",
-   "net": 7
+   "net": 8
+  },
+  {
+   "x1": 126.0,
+   "y1": 90.5,
+   "x2": 128.3,
+   "y2": 90.5,
+   "width": 0.3,
+   "layer": "F.Cu",
+   "net": 9
+  },
+  {
+   "x1": 102.8,
+   "y1": 90.2,
+   "x2": 102.8,
+   "y2": 88.9,
+   "width": 0.45,
+   "layer": "B.Cu",
+   "net": 1
+  },
+  {
+   "x1": 102.8,
+   "y1": 88.9,
+   "x2": 115.2,
+   "y2": 88.9,
+   "width": 0.45,
+   "layer": "B.Cu",
+   "net": 1
+  },
+  {
+   "x1": 115.2,
+   "y1": 88.9,
+   "x2": 133.3,
+   "y2": 88.9,
+   "width": 0.45,
+   "layer": "B.Cu",
+   "net": 1
+  },
+  {
+   "x1": 115.2,
+   "y1": 88.9,
+   "x2": 115.2,
+   "y2": 92.7,
+   "width": 0.45,
+   "layer": "B.Cu",
+   "net": 1
+  },
+  {
+   "x1": 133.3,
+   "y1": 88.9,
+   "x2": 133.3,
+   "y2": 98.6,
+   "width": 0.45,
+   "layer": "B.Cu",
+   "net": 1
+  },
+  {
+   "x1": 110.6,
+   "y1": 93.5,
+   "x2": 110.6,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 110.6,
+   "y1": 95.0,
+   "x2": 121.0,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 121.0,
+   "y1": 95.0,
+   "x2": 131.4,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 121.0,
+   "y1": 92.7,
+   "x2": 121.0,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 131.4,
+   "y1": 91.8,
+   "x2": 131.4,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 110.6,
+   "y1": 95.0,
+   "x2": 107.0,
+   "y2": 95.0,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 107.0,
+   "y1": 95.0,
+   "x2": 107.0,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 104.2,
+   "y1": 104.0,
+   "x2": 104.2,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 104.2,
+   "y1": 106.2,
+   "x2": 107.0,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 107.0,
+   "y1": 106.2,
+   "x2": 123.5,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 123.5,
+   "y1": 106.2,
+   "x2": 132.2,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 132.2,
+   "y1": 106.2,
+   "x2": 135.0,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 123.5,
+   "y1": 109.55,
+   "x2": 123.5,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 132.2,
+   "y1": 108.5,
+   "x2": 132.2,
+   "y2": 106.2,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 135.0,
+   "y1": 106.2,
+   "x2": 135.0,
+   "y2": 103.68,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
+  },
+  {
+   "x1": 135.0,
+   "y1": 103.68,
+   "x2": 133.3,
+   "y2": 103.68,
+   "width": 0.5,
+   "layer": "B.Cu",
+   "net": 2
   }
  ],
  "connectivity": [
@@ -354,10 +1291,12 @@
    "pads": [
     "U1.1",
     "C1.1",
+    "Q1.1",
     "J1.1"
    ],
-   "tracks": 1,
-   "missing": 1,
+   "tracks": 8,
+   "vias": 2,
+   "missing": 0,
    "single_pad": false
   },
   {
@@ -365,56 +1304,73 @@
    "pads": [
     "U1.8",
     "C1.2",
+    "R1.2",
     "D1.2",
+    "D2.2",
+    "SW1.3",
+    "SW1.4",
+    "BZ1.2",
     "J1.3"
    ],
-   "tracks": 1,
-   "missing": 2,
+   "tracks": 23,
+   "vias": 5,
+   "missing": 0,
    "single_pad": false
   },
   {
    "net": "PA6_PIEZO",
    "pads": [
-    "U1.2"
+    "U1.2",
+    "BZ1.1"
    ],
-   "tracks": 0,
+   "tracks": 2,
+   "vias": 1,
    "missing": 0,
-   "single_pad": true
+   "single_pad": false
   },
   {
    "net": "PA7_LDR",
    "pads": [
-    "U1.3"
+    "U1.3",
+    "R1.1",
+    "Q1.2"
    ],
-   "tracks": 0,
+   "tracks": 3,
+   "vias": 0,
    "missing": 0,
-   "single_pad": true
+   "single_pad": false
   },
   {
    "net": "PA1_BTN",
    "pads": [
-    "U1.4"
+    "U1.4",
+    "SW1.1",
+    "SW1.2"
    ],
-   "tracks": 0,
+   "tracks": 2,
+   "vias": 0,
    "missing": 0,
-   "single_pad": true
+   "single_pad": false
   },
   {
    "net": "PA2_STATUS",
    "pads": [
-    "U1.5"
+    "U1.5",
+    "R4.1"
    ],
-   "tracks": 0,
+   "tracks": 1,
+   "vias": 0,
    "missing": 0,
-   "single_pad": true
+   "single_pad": false
   },
   {
    "net": "PA0_UPDI",
    "pads": [
     "U1.6",
-    "J1.2"
+    "R3.1"
    ],
    "tracks": 1,
+   "vias": 0,
    "missing": 0,
    "single_pad": false
   },
@@ -422,9 +1378,43 @@
    "net": "PA3_PWM",
    "pads": [
     "U1.7",
+    "R2.1"
+   ],
+   "tracks": 2,
+   "vias": 0,
+   "missing": 0,
+   "single_pad": false
+  },
+  {
+   "net": "PWM_LED",
+   "pads": [
+    "R2.2",
     "D1.1"
    ],
    "tracks": 1,
+   "vias": 0,
+   "missing": 0,
+   "single_pad": false
+  },
+  {
+   "net": "STATUS_LED",
+   "pads": [
+    "R4.2",
+    "D2.1"
+   ],
+   "tracks": 1,
+   "vias": 0,
+   "missing": 0,
+   "single_pad": false
+  },
+  {
+   "net": "UPDI_HDR",
+   "pads": [
+    "R3.2",
+    "J1.2"
+   ],
+   "tracks": 1,
+   "vias": 0,
    "missing": 0,
    "single_pad": false
   }
@@ -435,7 +1425,7 @@
    26.0,
    1.6
   ],
-  "volume": 1493.83,
+  "volume": 1490.613,
   "valid": true
  }
 }

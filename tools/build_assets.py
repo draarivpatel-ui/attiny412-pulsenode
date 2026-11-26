@@ -106,6 +106,16 @@ def load_board():
                               x2=fx + max(x1, x2), y2=fy + max(y1, y2),
                               layer=sval(find_one(r, "layer")[1]),
                               width=find_one(find_one(r, "stroke"), "width")[1]))
+        circles = []
+        for c in find_all(f, "fp_circle"):
+            center = find_one(c, "center")
+            end = find_one(c, "end")
+            cx, cy = _rot(center[1], center[2], frot)
+            ex, ey = _rot(end[1], end[2], frot)
+            radius = math.hypot(end[1] - center[1], end[2] - center[2])
+            circles.append(dict(x=fx + cx, y=fy + cy, r=radius,
+                                layer=sval(find_one(c, "layer")[1]),
+                                width=find_one(find_one(c, "stroke"), "width")[1]))
         pads = []
         for p in find_all(f, "pad"):
             pat = find_one(p, "at")
@@ -126,7 +136,16 @@ def load_board():
                              net=int(net[1]), net_name=sval(net[2]),
                              ref=props.get("Reference", "?")))
         fps.append(dict(name=sval(f[1]), ref=props.get("Reference"), value=props.get("Value"),
-                        x=fx, y=fy, ref_at=[fx + refx, fy + refy], rects=rects, pads=pads))
+                        x=fx, y=fy, ref_at=[fx + refx, fy + refy], rects=rects, circles=circles, pads=pads))
+    vias = []
+    for v in find_all(tree, "via"):
+        at = find_one(v, "at")
+        net = find_one(v, "net")
+        vias.append(dict(x=at[1], y=at[2],
+                         size=find_one(v, "size")[1],
+                         drill=find_one(v, "drill")[1],
+                         layers=[sval(x) for x in find_one(v, "layers")[1:]],
+                         net=int(net[1]), net_name=sval(net[2])))
     segs = []
     for s in find_all(tree, "segment"):
         a = find_one(s, "start")
@@ -135,27 +154,97 @@ def load_board():
                          width=find_one(s, "width")[1],
                          layer=sval(find_one(s, "layer")[1]),
                          net=int(find_one(s, "net")[1])))
-    return dict(nets=nets, outline=outline, texts=texts, footprints=fps, segments=segs)
+    return dict(nets=nets, outline=outline, texts=texts, footprints=fps, vias=vias, segments=segs)
+
+
+def _layer_key(layer):
+    return "F" if layer == "F.Cu" else "B" if layer == "B.Cu" else layer
+
+
+def _orient(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def _on_segment(a, b, p, tol=1e-7):
+    return (abs(_orient(a, b, p)) <= tol and
+            min(a[0], b[0]) - tol <= p[0] <= max(a[0], b[0]) + tol and
+            min(a[1], b[1]) - tol <= p[1] <= max(a[1], b[1]) + tol)
+
+
+def _segments_touch(a, b, c, d, tol=1e-7):
+    o1, o2 = _orient(a, b, c), _orient(a, b, d)
+    o3, o4 = _orient(c, d, a), _orient(c, d, b)
+    if abs(o1) <= tol and _on_segment(a, b, c, tol): return True
+    if abs(o2) <= tol and _on_segment(a, b, d, tol): return True
+    if abs(o3) <= tol and _on_segment(c, d, a, tol): return True
+    if abs(o4) <= tol and _on_segment(c, d, b, tol): return True
+    return (o1 > 0) != (o2 > 0) and (o3 > 0) != (o4 > 0)
+
+
+def _point_segment_distance(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    den = dx * dx + dy * dy
+    if den == 0:
+        return math.hypot(p[0] - a[0], p[1] - a[1])
+    t = max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / den))
+    return math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy))
+
+
+def _point_in_rect(p, r, tol=1e-7):
+    return (r["x"] - r["w"] / 2 - tol <= p[0] <= r["x"] + r["w"] / 2 + tol and
+            r["y"] - r["h"] / 2 - tol <= p[1] <= r["y"] + r["h"] / 2 + tol)
+
+
+def _segment_touches_rect(a, b, r, tol=1e-7):
+    if _point_in_rect(a, r, tol) or _point_in_rect(b, r, tol):
+        return True
+    x1, x2 = r["x"] - r["w"] / 2, r["x"] + r["w"] / 2
+    y1, y2 = r["y"] - r["h"] / 2, r["y"] + r["h"] / 2
+    edges = [((x1, y1), (x2, y1)), ((x2, y1), (x2, y2)),
+             ((x2, y2), (x1, y2)), ((x1, y2), (x1, y1))]
+    return any(_segments_touch(a, b, c, d, tol) for c, d in edges)
+
+
+def _pad_is_circle(p):
+    return p.get("shape") in ("circle", "oval") and abs(p.get("w", 0) - p.get("h", 0)) < 1e-9
+
+
+def _segment_touches_pad(a, b, p, tol=1e-7):
+    if _pad_is_circle(p):
+        return _point_segment_distance((p["x"], p["y"]), a, b) <= p["w"] / 2 + tol
+    return _segment_touches_rect(a, b, p, tol)
+
+
+def _pad_layers(p):
+    return {"F"} if p.get("kind") == "smd" else {"F", "B"}
 
 
 def connectivity(board):
-    """Union pads joined by tracks; report missing joins per net.
+    """Union pads joined by tracks and vias; report missing joins per net.
 
-    Track ends that meet mid-board form junctions, so a pad reached by a
-    multi-segment chain counts the same as one joined by a single track.
+    Contacts are geometric, not only endpoint equality: a track ending inside a
+    pad, touching another track on the same copper layer, or terminating at a
+    via all count as connected. Front and back copper remain separate unless a
+    through-hole pad or via bridges them.
     """
     pads = [p for f in board["footprints"] for p in f["pads"]]
+    vias = board.get("vias", [])
     report = []
     tol = 0.01
     for nid, name in sorted(board["nets"].items()):
         if nid == 0:
             continue
         npads = [p for p in pads if p["net"] == nid]
+        nvias = [v for v in vias if v["net"] == nid]
         segs = [s for s in board["segments"] if s["net"] == nid]
-        pts = [(p["x"], p["y"]) for p in npads]
+        objs = []
+        for p in npads:
+            objs.append(dict(kind="pad", pad=p, layers=_pad_layers(p)))
+        for v in nvias:
+            objs.append(dict(kind="via", via=v, layers={_layer_key(x) for x in v.get("layers", ["F.Cu", "B.Cu"])}))
         for s in segs:
-            pts += [(s["x1"], s["y1"]), (s["x2"], s["y2"])]
-        parent = list(range(len(pts)))
+            objs.append(dict(kind="seg", seg=s, layers={_layer_key(s["layer"])}))
+        parent = list(range(len(objs)))
 
         def root(i):
             while parent[i] != i:
@@ -164,17 +253,48 @@ def connectivity(board):
             return i
 
         def union(a, b):
-            parent[root(a)] = root(b)
+            ra, rb = root(a), root(b)
+            if ra != rb:
+                parent[rb] = ra
 
-        for k in range(len(segs)):
-            union(len(npads) + 2 * k, len(npads) + 2 * k + 1)
-        for i in range(len(pts)):
-            for j in range(i + 1, len(pts)):
-                if abs(pts[i][0] - pts[j][0]) < tol and abs(pts[i][1] - pts[j][1]) < tol:
+        def contact(a, b):
+            if not (a["layers"] & b["layers"]):
+                return False
+            ka, kb = a["kind"], b["kind"]
+            if ka == "seg" and kb == "seg":
+                sa, sb = a["seg"], b["seg"]
+                return _segments_touch((sa["x1"], sa["y1"]), (sa["x2"], sa["y2"]),
+                                       (sb["x1"], sb["y1"]), (sb["x2"], sb["y2"]), tol)
+            if ka == "seg" and kb == "pad":
+                s, p = a["seg"], b["pad"]
+                return _segment_touches_pad((s["x1"], s["y1"]), (s["x2"], s["y2"]), p, tol)
+            if ka == "pad" and kb == "seg":
+                return contact(b, a)
+            if ka == "seg" and kb == "via":
+                s, v = a["seg"], b["via"]
+                return _point_segment_distance((v["x"], v["y"]), (s["x1"], s["y1"]), (s["x2"], s["y2"])) <= v["size"] / 2 + tol
+            if ka == "via" and kb == "seg":
+                return contact(b, a)
+            if ka == "via" and kb == "pad":
+                v, p = a["via"], b["pad"]
+                if _pad_is_circle(p):
+                    return math.hypot(v["x"] - p["x"], v["y"] - p["y"]) <= v["size"] / 2 + p["w"] / 2 + tol
+                return _point_in_rect((v["x"], v["y"]), p, v["size"] / 2 + tol)
+            if ka == "pad" and kb == "via":
+                return contact(b, a)
+            if ka == "via" and kb == "via":
+                va, vb = a["via"], b["via"]
+                return math.hypot(va["x"] - vb["x"], va["y"] - vb["y"]) <= (va["size"] + vb["size"]) / 2 + tol
+            return False
+
+        for i in range(len(objs)):
+            for j in range(i + 1, len(objs)):
+                if contact(objs[i], objs[j]):
                     union(i, j)
-        groups = len({root(i) for i in range(len(npads))})
+        pad_indices = [i for i, o in enumerate(objs) if o["kind"] == "pad"]
+        groups = len({root(i) for i in pad_indices})
         report.append(dict(net=name, pads=[f'{p["ref"]}.{p["number"]}' for p in npads],
-                           tracks=len(segs),
+                           tracks=len(segs), vias=len(nvias),
                            missing=max(groups - 1, 0),
                            single_pad=len(npads) == 1))
     return report
@@ -286,17 +406,25 @@ def build_gerbers(board, out_dir):
         else:
             raise ValueError("unsupported pad shape %s %sx%s" % (p["shape"], p["w"], p["h"]))
 
+    via_pads = [dict(kind="smd", shape="circle", x=v["x"], y=v["y"], w=v["size"], h=v["size"],
+                     drill=v["drill"], rratio=0, net=v["net"], net_name=v["net_name"], ref="VIA")
+                for v in board.get("vias", [])]
+
     layers = {}
     g = Gerber("Copper,L1,Top")
-    for p in smd + tht:
+    for p in smd + tht + via_pads:
         pad_on(g, p)
     for s in board["segments"]:
-        g.line(X(s["x1"]), Y(s["y1"]), X(s["x2"]), Y(s["y2"]), s["width"])
+        if s["layer"] == "F.Cu":
+            g.line(X(s["x1"]), Y(s["y1"]), X(s["x2"]), Y(s["y2"]), s["width"])
     layers["F_Cu.gbr"] = g
 
     g = Gerber("Copper,L2,Bot")
-    for p in tht:
+    for p in tht + via_pads:
         pad_on(g, p)
+    for s in board["segments"]:
+        if s["layer"] == "B.Cu":
+            g.line(X(s["x1"]), Y(s["y1"]), X(s["x2"]), Y(s["y2"]), s["width"])
     layers["B_Cu.gbr"] = g
 
     g = Gerber("Soldermask,Top", "Negative")
@@ -316,10 +444,17 @@ def build_gerbers(board, out_dir):
 
     g = Gerber("Legend,Top")
     for f in board["footprints"]:
-        for r in f["rects"]:
+        for r in f.get("rects", []):
             if r["layer"] == "F.SilkS":
                 g.path([(X(r["x1"]), Y(r["y1"])), (X(r["x2"]), Y(r["y1"])),
                         (X(r["x2"]), Y(r["y2"])), (X(r["x1"]), Y(r["y2"]))], r["width"])
+        for c in f.get("circles", []):
+            if c["layer"] == "F.SilkS":
+                pts = []
+                for i in range(48):
+                    a = 2 * math.pi * i / 48
+                    pts.append((X(c["x"] + c["r"] * math.cos(a)), Y(c["y"] + c["r"] * math.sin(a))))
+                g.path(pts, c["width"])
     layers["F_Silkscreen.gbr"] = g
 
     g = Gerber("Profile,NP")
@@ -334,7 +469,7 @@ def build_gerbers(board, out_dir):
         path.write_text(gr.render(note))
         written.append(path)
 
-    holes = [p for p in tht if p["drill"]]
+    holes = [p for p in tht + via_pads if p["drill"]]
     drills = sorted({p["drill"] for p in holes})
     lines = ["M48", "; Generated by tools/build_assets.py", "; #@! TF.FileFunction,Plated,1,2,PTH",
              "METRIC"] + [f"T{i}C{d:.3f}" for i, d in enumerate(drills, 1)] + ["%"]
@@ -362,21 +497,34 @@ def build_cad(board):
         return oy + H - y
 
     board_solid = Pos(W / 2, H / 2, T / 2) * Box(W, H, T)
+    holes = []
     for f in board["footprints"]:
-        for p in f["pads"]:
-            if p["drill"]:
-                board_solid = board_solid - Pos(X(p["x"]), Y(p["y"]), T / 2) * Cylinder(p["drill"] / 2, T + 1)
-    board_solid.label = "PCB FR-4 36x26x1.6"
+        holes.extend(p for p in f["pads"] if p["drill"])
+    holes.extend(dict(x=v["x"], y=v["y"], drill=v["drill"]) for v in board.get("vias", []))
+    for p in holes:
+        board_solid = board_solid - Pos(X(p["x"]), Y(p["y"]), T / 2) * Cylinder(p["drill"] / 2, T + 1)
+    board_solid.label = f"PCB FR-4 {W:g}x{H:g}x1.6"
 
     envelopes = {
         "U1": (3.9, 4.9, 1.5, 0, 0),
         "C1": (2.0, 1.25, 1.0, 0, 0),
+        "R1": (2.0, 1.25, 0.8, 0, 0),
+        "R2": (2.0, 1.25, 0.8, 0, 0),
+        "R3": (2.0, 1.25, 0.8, 0, 0),
+        "R4": (2.0, 1.25, 0.8, 0, 0),
         "D1": (2.0, 1.25, 1.0, 0, 0),
+        "D2": (2.0, 1.25, 1.0, 0, 0),
+        "Q1": (2.0, 1.25, 1.0, 0, 0),
+        "SW1": (6.0, 6.0, 4.3, 0, 0),
         "J1": (2.54, 7.62, 2.5, 0, 2.54),
     }
     parts = []
     for f in board["footprints"]:
-        if f["ref"] in envelopes:
+        if f["ref"] == "BZ1":
+            body = Pos(X(f["x"]), Y(f["y"]), T + 6.5 / 2) * Cylinder(6.1, 6.5)
+            body.label = "BZ1 envelope diameter 12.2 x 6.5"
+            parts.append(body)
+        elif f["ref"] in envelopes:
             w, h, d, dx, dy = envelopes[f["ref"]]
             body = Pos(X(f["x"]) + dx, Y(f["y"]) - dy, T + d / 2) * Box(w, h, d)
             body.label = f'{f["ref"]} envelope {w}x{h}x{d}'
@@ -404,7 +552,9 @@ def main():
     files = build_gerbers(board, ROOT / "gerbers")
     with zipfile.ZipFile(ROOT / "gerbers" / "attiny412-pulsenode-gerbers.zip", "w", zipfile.ZIP_DEFLATED) as z:
         for f in files:
-            z.write(f, f.name)
+            info = zipfile.ZipInfo(f.name, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            z.writestr(info, f.read_bytes())
 
     manifest = []
     for rel in ["gerbers/attiny412-pulsenode-gerbers.zip"] + [f"gerbers/{f.name}" for f in files] + [

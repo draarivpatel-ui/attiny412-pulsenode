@@ -158,7 +158,7 @@ test("codec encode normalizes floats, -0 and out-of-range", () => {
 const RT = [
   { mode: 0, net: -1, sample: -1, tamper: 0 },
   { mode: 1, net: 3, sample: 0, tamper: 0 },
-  { mode: 2, net: 8, sample: 63, tamper: 1 },
+  { mode: 2, net: 11, sample: 63, tamper: 1 },
   { mode: 2, net: 0, sample: 12, tamper: 0 },
   { mode: 1, net: 1, sample: 6, tamper: 1 },
 ];
@@ -197,7 +197,7 @@ test("codec rejects overlong payloads", () => {
 });
 const CLAMPS = [
   ["pnlab=v=1&m=99", { mode: 2 }], ["pnlab=v=1&m=-99", { mode: 0 }],
-  ["pnlab=v=1&n=99", { net: 8 }], ["pnlab=v=1&n=-99", { net: -1 }],
+  ["pnlab=v=1&n=99", { net: 11 }], ["pnlab=v=1&n=-99", { net: -1 }],
   ["pnlab=v=1&s=99", { sample: 63 }], ["pnlab=v=1&s=-99", { sample: -1 }],
   ["pnlab=v=1&t=99", { tamper: 1 }], ["pnlab=v=1&t=-99", { tamper: 0 }],
   ["pnlab=v=1&m=999999999999", { mode: 2 }],
@@ -265,27 +265,27 @@ test("csvRows joins rows with CRLF and escapes each cell", () => {
 test("bom header is intact", () => {
   assert.equal(bom.header.join(","), "Reference,Value,Footprint,Quantity,MPN,Supplier,Unit_Cost_USD");
 });
-test("bom has 11 line items and 12 parts", () => {
-  assert.equal(bom.lineCount, 11);
+test("bom has 12 line items and 12 parts", () => {
+  assert.equal(bom.lineCount, 12);
   assert.equal(bom.partCount, 12);
 });
 test("bom cost column sums to $1.76", () => {
   assert.equal(Math.round(bom.totalCost * 100), 176);
 });
 test("bom placed refs and cost", () => {
-  assert.deepEqual(bom.placedRefs.sort(), ["C1", "D1", "J1", "U1"]);
-  assert.equal(Math.round(bom.placedCost * 100), 68);
+  assert.deepEqual(bom.placedRefs.sort(), ["BZ1", "C1", "D1", "D2", "J1", "Q1", "R1", "R2", "R3", "R4", "SW1", "U1"]);
+  assert.equal(Math.round(bom.placedCost * 100), 176);
 });
 test("bom remaining refs, parts and cost", () => {
-  assert.deepEqual(bom.remainingRefs.sort(), ["BZ1", "D2", "Q1", "R1", "R2", "R3", "SW1"]);
-  assert.equal(bom.remainingParts, 8);
-  assert.equal(Math.round(bom.remainingCost * 100), 108);
+  assert.deepEqual(bom.remainingRefs, []);
+  assert.equal(bom.remainingParts, 0);
+  assert.equal(Math.round(bom.remainingCost * 100), 0);
 });
 const BOM_ROWS = [
-  ["U1", 1, 0.58, true], ["C1", 1, 0.02, true], ["R1", 1, 0.01, false],
-  ["R2", 2, 0.02, false], ["R3", 1, 0.01, false], ["D1", 1, 0.03, true],
-  ["D2", 1, 0.03, false], ["Q1", 1, 0.24, false], ["SW1", 1, 0.12, false],
-  ["BZ1", 1, 0.65, false], ["J1", 1, 0.05, true],
+  ["U1", 1, 0.58, true], ["C1", 1, 0.02, true], ["R1", 1, 0.01, true],
+  ["R2", 1, 0.01, true], ["R3", 1, 0.01, true], ["R4", 1, 0.01, true],
+  ["D1", 1, 0.03, true], ["D2", 1, 0.03, true], ["Q1", 1, 0.24, true],
+  ["SW1", 1, 0.12, true], ["BZ1", 1, 0.65, true], ["J1", 1, 0.05, true],
 ];
 for (const [ref, qty, cost, placed] of BOM_ROWS) {
   test(`bom row ${ref}: qty ${qty}, cost $${cost}, placed ${placed}`, () => {
@@ -302,7 +302,7 @@ test("bom refs are unique", () => {
 });
 test("bom placed plus remaining equals total and parts", () => {
   assert.equal(Math.round((bom.placedCost + bom.remainingCost) * 100), Math.round(bom.totalCost * 100));
-  assert.equal(bom.partCount - bom.remainingParts, 4);
+  assert.equal(bom.partCount - bom.remainingParts, 12);
 });
 test("parseBom throws on malformed numeric fields", () => {
   assert.throws(() => L.parseBom("H\nX,v,f,NaNnotint,m,s,0.1"), TypeError);
@@ -331,28 +331,31 @@ test("board outline is 36 x 26 mm at 100, 85", () => {
   assert.deepEqual(board.cadSize, [36, 26, 1.6]);
   assert.equal(board.cadValid, true);
 });
-test("board has exactly 4 placed footprints and 8 named nets", () => {
-  assert.equal(board.footprintCount, 4);
-  assert.deepEqual(board.placedRefs, ["U1", "C1", "D1", "J1"]);
-  assert.equal(board.namedNetCount, 8);
+test("board has exactly 12 placed footprints and 11 named nets", () => {
+  assert.equal(board.footprintCount, 12);
+  assert.deepEqual(board.placedRefs, ["U1", "C1", "R1", "R2", "R3", "R4", "D1", "D2", "Q1", "SW1", "BZ1", "J1"]);
+  assert.equal(board.namedNetCount, 11);
 });
-test("board totals: 15 pads, 4 track segments, 3 open connections", () => {
-  assert.equal(board.padTotal, 15);
-  assert.equal(board.trackTotal, 4);
-  assert.equal(board.missingTotal, 3);
+test("board totals: 33 pads, 45 track segments, 0 open connections", () => {
+  assert.equal(board.padTotal, 33);
+  assert.equal(board.trackTotal, 45);
+  assert.equal(board.missingTotal, 0);
 });
-test("single-pad nets are the 4 unplaced MCU pins", () => {
-  assert.deepEqual(board.lonelyNets, ["PA6_PIEZO", "PA7_LDR", "PA1_BTN", "PA2_STATUS"]);
+test("no single-pad nets remain", () => {
+  assert.deepEqual(board.lonelyNets, []);
 });
 const NET_WANT = [
-  { id: 1, name: "+5V", pin: "1", pads: 3, tracks: 1, missing: 1, status: "unrouted" },
-  { id: 2, name: "GND", pin: "8", pads: 4, tracks: 1, missing: 2, status: "unrouted" },
-  { id: 3, name: "PA6_PIEZO", pin: "2", pads: 1, tracks: 0, missing: 0, status: "awaiting part" },
-  { id: 4, name: "PA7_LDR", pin: "3", pads: 1, tracks: 0, missing: 0, status: "awaiting part" },
-  { id: 5, name: "PA1_BTN", pin: "4", pads: 1, tracks: 0, missing: 0, status: "awaiting part" },
-  { id: 6, name: "PA2_STATUS", pin: "5", pads: 1, tracks: 0, missing: 0, status: "awaiting part" },
+  { id: 1, name: "+5V", pin: "1", pads: 4, tracks: 8, missing: 0, status: "routed" },
+  { id: 2, name: "GND", pin: "8", pads: 9, tracks: 23, missing: 0, status: "routed" },
+  { id: 3, name: "PA6_PIEZO", pin: "2", pads: 2, tracks: 2, missing: 0, status: "routed" },
+  { id: 4, name: "PA7_LDR", pin: "3", pads: 3, tracks: 3, missing: 0, status: "routed" },
+  { id: 5, name: "PA1_BTN", pin: "4", pads: 3, tracks: 2, missing: 0, status: "routed" },
+  { id: 6, name: "PA2_STATUS", pin: "5", pads: 2, tracks: 1, missing: 0, status: "routed" },
   { id: 7, name: "PA0_UPDI", pin: "6", pads: 2, tracks: 1, missing: 0, status: "routed" },
-  { id: 8, name: "PA3_PWM", pin: "7", pads: 2, tracks: 1, missing: 0, status: "routed" },
+  { id: 8, name: "PA3_PWM", pin: "7", pads: 2, tracks: 2, missing: 0, status: "routed" },
+  { id: 9, name: "PWM_LED", pin: null, pads: 2, tracks: 1, missing: 0, status: "routed" },
+  { id: 10, name: "STATUS_LED", pin: null, pads: 2, tracks: 1, missing: 0, status: "routed" },
+  { id: 11, name: "UPDI_HDR", pin: null, pads: 2, tracks: 1, missing: 0, status: "routed" },
 ];
 for (const w of NET_WANT) {
   test(`net ${w.name}: SOIC pin ${w.pin}, ${w.pads} pads, ${w.status}`, () => {
@@ -379,16 +382,15 @@ test("every footprint pad net resolves to a named net", () => {
     }
   }
 });
-test("U1 has all 8 SOIC pads mapped to the 8 named nets", () => {
+test("U1 has all 8 SOIC pads mapped to the 8 MCU-side nets", () => {
   const u1 = pcb.footprints.find((f) => f.ref === "U1");
   assert.equal(u1.pads.length, 8);
   const names = u1.pads.map((p) => p.net_name).sort();
-  assert.deepEqual(names, board.nets.map((n) => n.name).sort());
+  assert.deepEqual(names, ["+5V", "GND", "PA0_UPDI", "PA1_BTN", "PA2_STATUS", "PA3_PWM", "PA6_PIEZO", "PA7_LDR"].sort());
 });
-test("awaiting-parts map covers all 8 unplaced BOM units once", () => {
+test("awaiting-parts map is empty on the completed board", () => {
   const charged = board.nets.flatMap((n) => n.awaiting);
-  assert.equal(charged.length, 8);
-  assert.deepEqual(charged.filter((x) => x === "R2").length, 2);
+  assert.equal(charged.length, 0);
 });
 test("analyzeBoard throws on non-objects", () => {
   assert.throws(() => L.analyzeBoard(null), TypeError);
@@ -507,20 +509,20 @@ const stamped0 = L.stampProof(L.buildProofPayload(board, bom, state0));
 test("proof payload reports the real board facts", () => {
   const p = stamped0.payload;
   assert.deepEqual(p.board.outlineMm, [36, 26]);
-  assert.equal(p.board.footprints, 4);
-  assert.equal(p.board.namedNets, 8);
-  assert.equal(p.board.padsPlaced, 15);
-  assert.equal(p.board.trackSegments, 4);
-  assert.equal(p.board.openConnections, 3);
-  assert.equal(p.board.readyToOrder, false);
+  assert.equal(p.board.footprints, 12);
+  assert.equal(p.board.namedNets, 11);
+  assert.equal(p.board.padsPlaced, 33);
+  assert.equal(p.board.trackSegments, 45);
+  assert.equal(p.board.openConnections, 0);
+  assert.equal(p.board.readyToOrder, true);
 });
 test("proof payload reports the real bom facts", () => {
   const p = stamped0.payload;
-  assert.equal(p.bom.lineItems, 11);
+  assert.equal(p.bom.lineItems, 12);
   assert.equal(p.bom.parts, 12);
   assert.equal(p.bom.costUsd, 1.76);
-  assert.equal(p.bom.placedUsd, 0.68);
-  assert.equal(p.bom.remainingUsd, 1.08);
+  assert.equal(p.bom.placedUsd, 1.76);
+  assert.equal(p.bom.remainingUsd, 0);
 });
 test("stampProof caches one entry per canonical state", () => {
   const again = L.stampProof(L.buildProofPayload(board, bom, { ...state0 }));
@@ -562,9 +564,9 @@ test("proofJson is valid JSON that round-trips the payload", () => {
 });
 test("proofMarkdown carries honest counts and dollar amounts in backticks", () => {
   const md = L.proofMarkdown(stamped0);
-  assert.ok(md.includes("`$1.76`") && md.includes("`$0.68`") && md.includes("`$1.08`"));
+  assert.ok(md.includes("`$1.76`") && md.includes("`$0.00`"));
   assert.ok(md.includes("36 x 26 mm"));
-  assert.ok(md.includes("Ready to order: no"));
+  assert.ok(md.includes("Ready to order: yes"));
 });
 
 // ---------------------------------------------------------------------------

@@ -281,8 +281,12 @@ try {
   function drawBoard() {
     const kids = [];
     kids.push(svg("rect", { x: o.x, y: o.y, width: o.w, height: o.h, fill: "oklch(88% 0.05 152)", stroke: "var(--color-ink)", "stroke-width": o.width * 2 }));
-    pcb.footprints.forEach((f) => (f.rects || []).forEach((r) =>
-      kids.push(svg("rect", { x: r.x1, y: r.y1, width: r.x2 - r.x1, height: r.y2 - r.y1, fill: "none", stroke: "var(--color-ink-2)", "stroke-width": r.width }))));
+    pcb.footprints.forEach((f) => {
+      (f.rects || []).forEach((r) =>
+        kids.push(svg("rect", { x: r.x1, y: r.y1, width: r.x2 - r.x1, height: r.y2 - r.y1, fill: "none", stroke: "var(--color-ink-2)", "stroke-width": r.width })));
+      (f.circles || []).forEach((c) =>
+        kids.push(svg("circle", { cx: c.x, cy: c.y, r: c.r, fill: "none", stroke: "var(--color-ink-2)", "stroke-width": c.width })));
+    });
     pcb.segments.forEach((s) => {
       const dim = selectedNet !== null && s.net !== selectedNet;
       kids.push(svg("line", { x1: s.x1, y1: s.y1, x2: s.x2, y2: s.y2, stroke: s.layer === "B.Cu" ? "oklch(55% 0.13 250)" : "oklch(60% 0.17 25)",
@@ -298,6 +302,11 @@ try {
       kids.push(shape);
       if (p.drill) kids.push(svg("circle", { cx: p.x, cy: p.y, r: p.drill / 2, fill: "var(--color-paper)", stroke: "var(--color-ink)", "stroke-width": 0.04 }));
     }));
+    (pcb.vias || []).forEach((v) => {
+      const dim = selectedNet !== null && v.net !== selectedNet;
+      kids.push(svg("circle", { cx: v.x, cy: v.y, r: v.size / 2, fill: "var(--color-paper)", stroke: netColor(v.net), "stroke-width": 0.18, opacity: dim ? 0.25 : 1 }));
+      kids.push(svg("circle", { cx: v.x, cy: v.y, r: v.drill / 2, fill: "var(--color-ink)", opacity: dim ? 0.2 : 0.75 }));
+    });
     pcb.footprints.forEach((f) => kids.push(svg("text", { x: f.ref_at[0], y: f.ref_at[1], "font-size": 1.1, "text-anchor": "middle" }, f.ref)));
     pcb.texts.forEach((t) => kids.push(svg("text", { x: t.x, y: t.y, "font-size": t.size, "text-anchor": "middle", opacity: 0.8 }, t.text)));
     board.replaceChildren(...kids);
