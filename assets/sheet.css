@@ -253,9 +253,9 @@ svg .dimtext { font-size: 12px; paint-order: stroke; stroke: var(--color-paper);
 }
 
 /* print output keeps the drafting-sheet evidence and removes live controls */
-@page { margin: 12mm; }
+@page { margin: 12mm; background: #fff; }
 @media print {
-  nav, button, input, select, textarea, [role="button"], [role="tab"] { display: none !important; }
+  nav, button, input, select, textarea { display: none !important; }
   .toolbar, .filters, .lab-actions, .file .actions, .toast { display: none !important; }
   body { background: #fff; color: #111; }
   section { padding: 18px 0; }
