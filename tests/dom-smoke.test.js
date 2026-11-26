@@ -90,3 +90,14 @@ test('interactive controls for 3D board viewer, 2D layout, and net inspector exi
     assert.ok(html.includes(`id="${id}"`), `Missing DOM id ${id}`);
   }
 });
+
+test('craft regression: controls meet touch size, chart labels stay inside, and print rules exist', () => {
+  assert.match(css, /\.btn, \.seg button, \.chip-btn \{[\s\S]*?min-height:\s*44px/);
+  assert.match(css, /\.chip-btn \{[^}]*min-height:\s*44px[^}]*min-width:\s*44px/);
+  assert.match(css, /@page \{ margin: 12mm; \}/);
+  assert.match(css, /@media print \{[\s\S]*?nav, button, input, select, textarea[\s\S]*?display: none !important/);
+  assert.match(css, /\.lab-card, \.note, \.file, \.inspector, \.lab-fig, tr \{[\s\S]*?break-inside: avoid/);
+  const labUi = fs.readFileSync(path.join(root, 'assets/lab-ui.js'), 'utf8');
+  assert.match(labUi, /markerHitRadius\(centers, 22\)/);
+  assert.match(labUi, /const B = \{ w: 660, h: 240, base: 188, top: 46 \}/);
+});

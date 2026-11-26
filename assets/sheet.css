@@ -100,7 +100,8 @@ section { padding: var(--space-7) var(--space-4); border-bottom: 1px solid var(-
   background: var(--color-paper);
   border: 1px solid var(--color-ink);
   padding: 9px 12px;
-  min-height: 36px;
+  min-height: 44px;
+  min-width: 44px;
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -114,7 +115,7 @@ section { padding: var(--space-7) var(--space-4); border-bottom: 1px solid var(-
 .btn.primary:hover { background: var(--accent-wash); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
 .btn.is-done { background: var(--color-ok-bg); color: var(--color-ok); border-color: var(--color-ok); }
-.chip-btn { padding: 6px 10px; min-height: 30px; font-size: 12px; }
+.chip-btn { padding: 6px 10px; min-height: 44px; min-width: 44px; font-size: 12px; }
 
 .canvas { position: relative; flex: 1; min-height: 420px; background-color: var(--color-paper);
   background-image: linear-gradient(var(--color-grid) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
@@ -185,9 +186,9 @@ tfoot td { font-weight: 600; background: var(--color-paper-2); border-bottom: 0;
 .lab-digest-line { font-size: 12px; color: var(--color-ink-2); }
 .lab-digest-line code { font-size: 11.5px; overflow-wrap: anywhere; word-break: break-all; }
 .lab-charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); margin: var(--space-5) 0; }
-.lab-fig { margin: 0; }
+.lab-fig { margin: 0; overflow-x: auto; }
 .lab-fig figcaption h3 { font-size: 20px; }
-.lab-fig svg { width: 100%; height: auto; display: block; min-width: 0; }
+.lab-fig svg { width: 100%; height: auto; display: block; min-width: 660px; }
 .lab-tests-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .lab-tests { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; max-height: 340px; overflow: auto; }
 .lab-tests li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: start; }
@@ -249,4 +250,18 @@ svg .dimtext { font-size: 12px; paint-order: stroke; stroke: var(--color-paper);
 }
 @media (forced-colors: active) {
   .btn[aria-pressed="true"], .seg button[aria-selected="true"], .seg button[aria-pressed="true"] { outline: 2px solid Highlight; }
+}
+
+/* print output keeps the drafting-sheet evidence and removes live controls */
+@page { margin: 12mm; }
+@media print {
+  nav, button, input, select, textarea, [role="button"], [role="tab"] { display: none !important; }
+  .toolbar, .filters, .lab-actions, .file .actions, .toast { display: none !important; }
+  body { background: #fff; color: #111; }
+  section { padding: 18px 0; }
+  .lab-fig { overflow: visible; }
+  .lab-fig svg { min-width: 0; }
+  .lab-card, .note, .file, .inspector, .lab-fig, tr { break-inside: avoid; page-break-inside: avoid; }
+  .lab-card, .note, .file, .inspector, .table-wrap { box-shadow: none; }
+  a { color: #111; }
 }

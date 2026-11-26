@@ -129,7 +129,7 @@ export function initLab({ pcb, bomText, onSelectNet }) {
 
     // sample markers with adaptive hit radii
     const centers = pts.map((p) => xAdc(p.adc));
-    const hitR = L.markerHitRadius(centers, 12);
+    const hitR = L.markerHitRadius(centers, 22);
     pts.forEach((p, i) => {
       const cx = centers[i];
       const cy = yDuty(p.dutyPct);
@@ -158,7 +158,7 @@ export function initLab({ pcb, bomText, onSelectNet }) {
 
   // ---- chart 2: BOM cost placed vs remaining -------------------------------
   function drawBom() {
-    const B = { w: 660, h: 240, base: 188, top: 26 };
+    const B = { w: 660, h: 240, base: 188, top: 46 };
     const max = bom.totalCost || 1;
     const bh = (c) => (c / max) * (B.base - B.top);
     const cols = [
